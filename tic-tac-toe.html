@@ -1,0 +1,367 @@
+
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON TIC-TAC-TOE PRO</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 25px 15px;
+    background: #080d19;
+    color: #eafaff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+h1 {
+    color: #00f5ff;
+    text-shadow: 0 0 15px #00d9ff;
+    font-size: clamp(28px, 6vw, 44px);
+}
+
+.subtitle { color: #9db6ce; margin-bottom: 25px; }
+
+.game {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 22px;
+    background: #111a2c;
+    border: 1px solid #294865;
+    border-radius: 20px;
+    box-shadow: 0 0 25px #00d9ff18;
+}
+
+select, .action {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #31516d;
+    border-radius: 10px;
+    background: #0a1222;
+    color: #eafaff;
+    font-size: 16px;
+}
+
+select { margin-bottom: 18px; }
+
+.scoreboard {
+    display: flex;
+    justify-content: space-around;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.score {
+    flex: 1;
+    padding: 10px 5px;
+    background: #0a1222;
+    border: 1px solid #294865;
+    border-radius: 12px;
+}
+
+.score strong {
+    display: block;
+    font-size: 25px;
+    margin-top: 6px;
+}
+
+.x { color: #00f5ff; }
+.o { color: #ff4fd8; }
+
+#status {
+    min-height: 28px;
+    margin: 18px 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
+}
+
+.cell {
+    aspect-ratio: 1;
+    border: 1px solid #31516d;
+    border-radius: 12px;
+    background: #0a1222;
+    color: #eafaff;
+    font-size: clamp(42px, 12vw, 65px);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.cell:hover:empty { background: #172940; }
+.cell.winner {
+    background: #183a40;
+    border-color: #00f5ff;
+    box-shadow: inset 0 0 18px #00f5ff25;
+}
+
+.controls {
+    display: grid;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.action {
+    border-color: #00d9ff;
+    background: #102b40;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.action:hover { background: #19435c; }
+
+.back {
+    display: inline-block;
+    margin-top: 22px;
+    padding: 11px 15px;
+    border: 1px solid #31516d;
+    border-radius: 9px;
+    background: #121e33;
+    color: #eafaff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.note { color: #8fa8c2; font-size: 13px; margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<h1>NEON TIC-TAC-TOE</h1>
+<p class="subtitle">Kolm ritta — kas X või O võidab?</p>
+
+<main class="game">
+    <label for="mode">Mängurežiim</label>
+    <select id="mode">
+        <option value="computer">🤖 Mängija vs arvuti</option>
+        <option value="two">👥 Mängija vs mängija</option>
+    </select>
+
+    <div class="scoreboard">
+        <div class="score">
+            <span class="x">X mängija</span>
+            <strong id="scoreX" class="x">0</strong>
+        </div>
+        <div class="score">
+            <span>Viigid</span>
+            <strong id="scoreDraw">0</strong>
+        </div>
+        <div class="score">
+            <span class="o" id="oLabel">Arvuti O</span>
+            <strong id="scoreO" class="o">0</strong>
+        </div>
+    </div>
+
+    <div id="status" aria-live="polite">Sinu kord! Sina oled X.</div>
+
+    <div class="board" id="board">
+        <button class="cell" data-index="0" aria-label="Lahter 1"></button>
+        <button class="cell" data-index="1" aria-label="Lahter 2"></button>
+        <button class="cell" data-index="2" aria-label="Lahter 3"></button>
+        <button class="cell" data-index="3" aria-label="Lahter 4"></button>
+        <button class="cell" data-index="4" aria-label="Lahter 5"></button>
+        <button class="cell" data-index="5" aria-label="Lahter 6"></button>
+        <button class="cell" data-index="6" aria-label="Lahter 7"></button>
+        <button class="cell" data-index="7" aria-label="Lahter 8"></button>
+        <button class="cell" data-index="8" aria-label="Lahter 9"></button>
+    </div>
+
+    <div class="controls">
+        <button class="action" id="newRound">🔄 Uus mäng</button>
+        <button class="action" id="resetScore">🧹 Nulli skoor</button>
+    </div>
+
+    <p class="note">Mängi sõbra või arvuti vastu!</p>
+</main>
+
+<a class="back" href="index.html">← Mängude avaleht</a>
+
+<script>
+(() => {
+    const cells = [...document.querySelectorAll(".cell")];
+    const status = document.getElementById("status");
+    const mode = document.getElementById("mode");
+    const scoreXElement = document.getElementById("scoreX");
+    const scoreOElement = document.getElementById("scoreO");
+    const scoreDrawElement = document.getElementById("scoreDraw");
+    const oLabel = document.getElementById("oLabel");
+
+    const winningLines = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+    ];
+
+    let board = Array(9).fill("");
+    let currentPlayer = "X";
+    let gameOver = false;
+    let scores = { X: 0, O: 0, draw: 0 };
+
+    function updateScores() {
+        scoreXElement.textContent = scores.X;
+        scoreOElement.textContent = scores.O;
+        scoreDrawElement.textContent = scores.draw;
+    }
+
+    function checkWinner() {
+        return winningLines.find(line =>
+            line.every(i => board[i] === board[line[0]] && board[i] !== "")
+        );
+    }
+
+    function finishTurn() {
+        const line = checkWinner();
+
+        if (line) {
+            gameOver = true;
+            line.forEach(i => cells[i].classList.add("winner"));
+            scores[currentPlayer]++;
+            updateScores();
+            status.textContent = currentPlayer === "X"
+                ? "X võitis! 🎉"
+                : (mode.value === "computer" ? "Arvuti võitis! 🤖" : "O võitis! 🎉");
+            return true;
+        }
+
+        if (board.every(cell => cell !== "")) {
+            gameOver = true;
+            scores.draw++;
+            updateScores();
+            status.textContent = "Viik! 🤝";
+            return true;
+        }
+
+        return false;
+    }
+
+    function placeMark(index, player) {
+        board[index] = player;
+        cells[index].textContent = player;
+        cells[index].classList.add(player.toLowerCase());
+        cells[index].setAttribute(
+            "aria-label",
+            "Lahter " + (index + 1) + ": " + player
+        );
+    }
+
+    function computerMove() {
+        if (gameOver) return;
+
+        // Kõigepealt proovi ise võita, seejärel blokeeri X-i võidukäik.
+        let move = findWinningMove("O");
+
+        if (move === -1) move = findWinningMove("X");
+
+        // Eelista keskkohta ja seejärel nurki.
+        if (move === -1 && board[4] === "") move = 4;
+
+        if (move === -1) {
+            const corners = [0, 2, 6, 8].filter(i => board[i] === "");
+            if (corners.length) {
+                move = corners[Math.floor(Math.random() * corners.length)];
+            }
+        }
+
+        if (move === -1) {
+            const available = board
+                .map((value, index) => value === "" ? index : -1)
+                .filter(index => index !== -1);
+
+            if (available.length) {
+                move = available[Math.floor(Math.random() * available.length)];
+            }
+        }
+
+        if (move !== -1) {
+            currentPlayer = "O";
+            placeMark(move, "O");
+
+            if (!finishTurn()) {
+                currentPlayer = "X";
+                status.textContent = "Sinu kord! Sina oled X.";
+            }
+        }
+    }
+
+    function findWinningMove(player) {
+        for (let i = 0; i < board.length; i++) {
+            if (board[i] !== "") continue;
+
+            board[i] = player;
+            const wins = checkWinner() !== undefined;
+            board[i] = "";
+
+            if (wins) return i;
+        }
+
+        return -1;
+    }
+
+    function play(index) {
+        if (gameOver || board[index] !== "") return;
+
+        if (mode.value === "computer" && currentPlayer === "O") return;
+
+        placeMark(index, currentPlayer);
+
+        if (finishTurn()) return;
+
+        if (mode.value === "computer") {
+            status.textContent = "Arvuti mõtleb...";
+            cells.forEach(cell => cell.disabled = true);
+
+            window.setTimeout(() => {
+                computerMove();
+                cells.forEach(cell => cell.disabled = gameOver || cell.textContent !== "");
+            }, 350);
+        } else {
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            status.textContent = currentPlayer + " mängija kord";
+        }
+    }
+
+    function newRound() {
+        board = Array(9).fill("");
+        currentPlayer = "X";
+        gameOver = false;
+
+        cells.forEach((cell, index) => {
+            cell.textContent = "";
+            cell.disabled = false;
+            cell.classList.remove("x", "o", "winner");
+            cell.setAttribute("aria-label", "Lahter " + (index + 1));
+        });
+
+        status.textContent = mode.value === "computer"
+            ? "Sinu kord! Sina oled X."
+            : "X mängija alustab!";
+    }
+
+    mode.addEventListener("change", () => {
+        oLabel.textContent = mode.value === "computer" ? "Arvuti O" : "O mängija";
+        newRound();
+    });
+
+    cells.forEach((cell, index) => {
+        cell.addEventListener("click", () => play(index));
+    });
+
+    document.getElementById("newRound").addEventListener("click", newRound);
+
+    document.getElementById("resetScore").addEventListener("click", () => {
+        scores = { X: 0, O: 0, draw: 0 };
+        updateScores();
+        newRound();
+    });
+})();
+</script>
+</body>
+</html>

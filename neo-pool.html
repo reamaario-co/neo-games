@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON POOL</title>
+<style>
+:root{--cyan:#65e5ff;--pink:#ff4fd8;--gold:#ffeb70;--bg:#070b16;--panel:#111a2c;--felt:#087d69;--rail:#183b42}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding:18px;background:radial-gradient(ellipse at top,#15213b 0,#070b16 62%);color:#eafaff;font-family:Arial,Helvetica,sans-serif}
+.app{max-width:1700px;margin:0 auto}header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.brand{font-size:clamp(24px,4vw,38px);font-weight:900;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 14px #00cfff}
+.sub{font-size:12px;color:#9eb5d3;letter-spacing:2px;margin-top:3px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,select{background:#121e33;color:#eafaff;border:1px solid #31516d;border-radius:9px;padding:10px 13px;font-weight:700;cursor:pointer}
+button:hover,select:hover{border-color:var(--cyan);box-shadow:0 0 10px #00cfff33}
+button.primary{background:#083d50;border-color:var(--cyan)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:14px;align-items:start}
+.game-panel,.side-panel{background:#0d1525;border:1px solid #263951;border-radius:15px;padding:12px;box-shadow:0 10px 30px #0005}
+.canvas-wrap{width:100%;max-width:1400px;margin:0 auto;overflow:hidden;border-radius:10px;background:#050914}canvas{display:block;width:100%;height:auto;touch-action:none}
+.hint{color:#9fb5d1;font-size:13px;line-height:1.5;margin:10px 3px 0}
+.side-panel h2{font-size:15px;letter-spacing:1px;color:var(--cyan);margin:4px 0 12px}
+.stat{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #253249;font-size:14px}
+.stat span:last-child{font-weight:bold;color:#fff}
+.section{margin-top:18px}
+.section label{display:block;font-size:12px;color:#9fb5d1;margin-bottom:7px}
+.side-panel select{width:100%}
+.side-buttons{display:grid;gap:8px;margin-top:12px}
+.message{min-height:36px;color:#ffeb70;font-size:13px;line-height:1.4;margin-top:12px}
+footer{color:#6f88a8;text-align:center;font-size:11px;margin:14px 0 4px}
+@media(max-width:780px){body{padding:8px}.layout{grid-template-columns:1fr}.side-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.side-panel h2,.message{grid-column:1/-1}.section{margin-top:0}.side-buttons{align-content:start}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div><div class="brand">NEON POOL</div><div class="sub">NEON BILLIARDS • ARCADE MODE</div></div>
+  <div class="toolbar">
+    <button id="newGameBtn" class="primary">Uus mäng</button>
+    <button id="pauseBtn">Paus</button>
+    <button id="fullscreenBtn">Täisekraan</button>
+  </div>
+</header>
+<div class="layout">
+  <main class="game-panel">
+    <div class="canvas-wrap"><canvas id="game" width="900" height="520" aria-label="Piljardilaud"></canvas></div>
+    <p class="hint">Sihtimiseks vajuta valge palli lähedal ja liiguta hiirt soovitud löögisuunas. Lase hiirenupp lahti, et lüüa. Kollast ennustusjoont ei kuvata.</p>
+  </main>
+  <aside class="side-panel">
+    <h2>MÄNGU MENÜÜ</h2>
+    <div class="stat"><span>Löögid</span><span id="shots">0</span></div>
+    <div class="stat"><span>Sisse löödud</span><span id="potted">0</span></div>
+    <div class="stat"><span>Kuulid laual</span><span id="remaining">15</span></div>
+    <div class="section">
+      <label for="tableSelect">Vali piljardilaud</label>
+      <select id="tableSelect">
+        <option value="emerald">Emerald Neon</option>
+        <option value="blue">Ice Blue</option>
+        <option value="purple">Purple Night</option>
+      </select>
+    </div>
+    <div class="section">
+      <label for="gameSelect">Vali mäng</label>
+      <select id="gameSelect">
+        <option value="pool">NEON POOL</option>
+        <option value="neo-game.html">NEO GAME</option>
+      </select>
+      <div class="hint">NEO GAME valik avab samas kaustas faili <b>neo-game.html</b>. Kui sinu lehe failinimi on teine, tuleb link vastavalt muuta.</div>
+    </div>
+    <div class="side-buttons">
+      <button id="resumeBtn" class="primary">Jätka mängu</button>
+      <button id="resetBtn">Alusta uuesti</button>
+    </div>
+    <div class="message" id="message">Vali laud ja alusta mängu.</div>
+  </aside>
+</div>
+<footer>NEON POOL • Üks fail: neo-pool.html</footer>
+</div>
+<script>
+(() => {
+'use strict';
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const shotsEl = document.getElementById('shots');
+const pottedEl = document.getElementById('potted');
+const remainingEl = document.getElementById('remaining');
+const messageEl = document.getElementById('message');
+const pauseBtn = document.getElementById('pauseBtn');
+const resumeBtn = document.getElementById('resumeBtn');
+const tableSelect = document.getElementById('tableSelect');
+const gameSelect = document.getElementById('gameSelect');
+
+// Laud on canvasest veidi väiksem ning taskud on varasemast tagasihoidlikumad.
+const table = {x:50, y:48, w:800, h:424, rail:22};
+const ballR = 10;
+const pocketR = 14;
+const friction = 0.986;
+const stopSpeed = 0.055;
+let balls = [];
+let cueBall = null;
+let dragging = false;
+let pointer = null;
+let paused = false;
+let gameFinished = false;
+let shots = 0;
+let potted = 0;
+let tableTheme = 'emerald';
+let lastTime = 0;
+
+const themes = {
+  emerald: {felt:'#087d69', rail:'#183b42', glow:'#20ffe0', name:'Emerald Neon'},
+  blue: {felt:'#07558a', rail:'#172f52', glow:'#65e5ff', name:'Ice Blue'},
+  purple: {felt:'#552477', rail:'#321344', glow:'#e47bff', name:'Purple Night'}
+};
+const pockets = () => {
+  // Taskute keskpunktid asuvad mänguala serval, et kuulid saaksid neisse päriselt veereda.
+  const left = table.x + table.rail + ballR;
+  const right = table.x + table.w - table.rail - ballR;
+  const top = table.y + table.rail + ballR;
+  const bottom = table.y + table.h - table.rail - ballR;
+  return [
+    {x:left,y:top}, {x:table.x+table.w/2,y:top}, {x:right,y:top},
+    {x:left,y:bottom}, {x:table.x+table.w/2,y:bottom}, {x:right,y:bottom}
+  ];
+};
+function makeBall(x,y,color,number=0,isCue=false){return {x,y,vx:0,vy:0,color,number,isCue,active:true,r:ballR};}
+function resetGame(){
+  balls=[]; shots=0; potted=0; gameFinished=false; paused=false; dragging=false; pointer=null;
+  const cx=table.x+table.w*0.27, cy=table.y+table.h/2;
+  cueBall=makeBall(cx,cy,'#f8fbff',0,true); balls.push(cueBall);
+  const rackX=table.x+table.w*0.70, rackY=table.y+table.h/2;
+  const colors=['#ffd447','#e84c4c','#4c9cff','#d84cff','#ff8d38','#42d879','#f6f6f6','#272b39','#ff6fae','#72f0e0','#8e9cff','#b8f04d','#ffb6d7','#b37bff','#f5a623'];
+  let idx=0;
+  for(let row=0;row<5;row++){
+    for(let col=0;col<=row;col++){
+      const x=rackX+row*(ballR*1.85);
+      const y=rackY+(col-row/2)*(ballR*2.05);
+      balls.push(makeBall(x,y,colors[idx],idx+1,false)); idx++;
+    }
+  }
+  messageEl.textContent='Vali siht ja löö. Mängu peatamiseks vajuta Paus.';
+  updateHUD(); draw();
+}
+function updateHUD(){
+  shotsEl.textContent=shots; pottedEl.textContent=potted;
+  remainingEl.textContent=balls.filter(b=>!b.isCue&&b.active).length;
+  pauseBtn.textContent=paused?'Jätka':'Paus';
+  resumeBtn.disabled=!paused;
+}
+function getPos(e){const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};}
+function moving(){return balls.some(b=>b.active&&Math.hypot(b.vx,b.vy)>stopSpeed);}
+function drawTable(){
+  const t=themes[tableTheme];
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const bg=ctx.createLinearGradient(0,0,900,520);bg.addColorStop(0,'#0b1426');bg.addColorStop(1,'#040711');ctx.fillStyle=bg;ctx.fillRect(0,0,900,520);
+  ctx.save();ctx.shadowColor=t.glow;ctx.shadowBlur=18;ctx.fillStyle=t.rail;roundedRect(table.x-8,table.y-8,table.w+16,table.h+16,24);ctx.fill();ctx.restore();
+  const felt=ctx.createLinearGradient(table.x,table.y,table.x+table.w,table.y+table.h);felt.addColorStop(0,t.felt);felt.addColorStop(1,shade(t.felt,-22));ctx.fillStyle=felt;roundedRect(table.x,table.y,table.w,table.h,17);ctx.fill();
+  ctx.strokeStyle=t.glow;ctx.lineWidth=2;ctx.globalAlpha=.55;roundedRect(table.x+8,table.y+8,table.w-16,table.h-16,12);ctx.stroke();ctx.globalAlpha=1;
+  // Keskjoon ja pallipaigutuse märgid
+  ctx.strokeStyle='#ffffff20';ctx.lineWidth=1;ctx.setLineDash([4,7]);ctx.beginPath();ctx.moveTo(table.x+table.w*.36,table.y+18);ctx.lineTo(table.x+table.w*.36,table.y+table.h-18);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#ffffff28';ctx.beginPath();ctx.arc(table.x+table.w*.36,table.y+table.h/2,3,0,Math.PI*2);ctx.fill();
+  for(const p of pockets()){
+    ctx.save();ctx.shadowColor='#000';ctx.shadowBlur=7;ctx.fillStyle='#02040a';ctx.beginPath();ctx.arc(p.x,p.y,pocketR,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.strokeStyle='#ffffff20';ctx.lineWidth=1;ctx.beginPath();ctx.arc(p.x,p.y,pocketR-2,0,Math.PI*2);ctx.stroke();
+  }
+}
+function roundedRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
+function shade(hex,amount){const n=parseInt(hex.slice(1),16);let r=(n>>16)+amount,g=((n>>8)&255)+amount,b=(n&255)+amount;r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function drawBall(b){if(!b.active)return;ctx.save();ctx.shadowColor=b.isCue?'#65e5ff':b.color;ctx.shadowBlur=8;ctx.fillStyle=b.color;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#ffffff88';ctx.lineWidth=1;ctx.stroke();
+  if(!b.isCue){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(b.x,b.y,4.1,0,Math.PI*2);ctx.fill();ctx.fillStyle='#111827';ctx.font='bold 5px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(b.number),b.x,b.y+.2);}
+  else{ctx.fillStyle='#bdefff';ctx.beginPath();ctx.arc(b.x-3,b.y-3,2,0,Math.PI*2);ctx.fill();}ctx.restore();}
+function findTarget(nx,ny,maxLen){let target=null,closest=maxLen;for(const b of balls){if(!b.active||b===cueBall)continue;const dx=b.x-cueBall.x,dy=b.y-cueBall.y;const proj=dx*nx+dy*ny;if(proj<=0||proj>maxLen)continue;const px=cueBall.x+nx*proj,py=cueBall.y+ny*proj;const dist=Math.hypot(b.x-px,b.y-py);if(dist<ballR*2&&proj<closest){target=b;closest=proj;}}return {target,closest};}
+function drawAim(){
+  if(!dragging||!pointer||!cueBall.active)return;
+  const dx=pointer.x-cueBall.x,dy=pointer.y-cueBall.y,len=Math.hypot(dx,dy);if(len<2)return;
+  const nx=dx/len,ny=dy/len;const arrowLength=Math.min(Math.max(len*3.5,60),600);const {target,closest}=findTarget(nx,ny,arrowLength);const lineLength=target?Math.max(0,closest-ballR*2):arrowLength;const ex=cueBall.x+nx*lineLength,ey=cueBall.y+ny*lineLength;const angle=Math.atan2(ny,nx);
+  // Ainult sinine sihtimisjoon — kollane ennustusjoon on eemaldatud.
+  ctx.save();ctx.beginPath();ctx.moveTo(cueBall.x,cueBall.y);ctx.lineTo(ex,ey);ctx.strokeStyle='#65e5ff';ctx.lineWidth=3;ctx.shadowColor='#00cfff';ctx.shadowBlur=8;ctx.setLineDash([10,5]);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(ex-14*Math.cos(angle)+7*Math.sin(angle),ey-14*Math.sin(angle)-7*Math.cos(angle));ctx.lineTo(ex-14*Math.cos(angle)-7*Math.sin(angle),ey-14*Math.sin(angle)+7*Math.cos(angle));ctx.closePath();ctx.fillStyle='#65e5ff';ctx.fill();ctx.restore();
+  // Löögijõu näidik
+  const power=Math.min(len/150,1);ctx.fillStyle='#ffffff20';ctx.fillRect(table.x+table.w/2-60,table.y+table.h+18,120,5);ctx.fillStyle=power>.7?'#ff4fd8':'#65e5ff';ctx.fillRect(table.x+table.w/2-60,table.y+table.h+18,120*power,5);
+}
+function collide(a,b){
+  const dx=b.x-a.x,dy=b.y-a.y;
+  let dist=Math.hypot(dx,dy);
+  const min=a.r+b.r;
+  if(dist>=min)return;
+  // Väldi olukorda, kus kaks palli on täpselt samas punktis.
+  let nx,ny;
+  if(dist<0.0001){dist=0;nx=1;ny=0;}else{nx=dx/dist;ny=dy/dist;}
+  const overlap=min-dist;
+  // Eemalda kattumine, et pallid ei jääks üksteise sisse kinni.
+  a.x-=nx*(overlap/2+0.01);a.y-=ny*(overlap/2+0.01);
+  b.x+=nx*(overlap/2+0.01);b.y+=ny*(overlap/2+0.01);
+  // Suhteline kiirus mööda kokkupõrke normaaljoont.
+  const rel=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
+  if(rel>=0)return; // Pallid eemalduvad juba üksteisest.
+  const impulse=-(1+0.96)*rel/2;
+  a.vx-=impulse*nx;a.vy-=impulse*ny;
+  b.vx+=impulse*nx;b.vy+=impulse*ny;
+}
+function update(dt){if(paused||gameFinished)return;const steps=Math.max(1,Math.min(3,Math.ceil(dt/8)));for(let s=0;s<steps;s++){
+  for(const b of balls){if(!b.active)continue;b.x+=b.vx/steps;b.y+=b.vy/steps;b.vx*=Math.pow(friction,1/steps);b.vy*=Math.pow(friction,1/steps);if(Math.abs(b.vx)<stopSpeed)b.vx=0;if(Math.abs(b.vy)<stopSpeed)b.vy=0;
+    const left=table.x+table.rail+ballR,right=table.x+table.w-table.rail-ballR,top=table.y+table.rail+ballR,bottom=table.y+table.h-table.rail-ballR;
+    if(b.x<left){b.x=left;b.vx=Math.abs(b.vx)*.88;}if(b.x>right){b.x=right;b.vx=-Math.abs(b.vx)*.88;}if(b.y<top){b.y=top;b.vy=Math.abs(b.vy)*.88;}if(b.y>bottom){b.y=bottom;b.vy=-Math.abs(b.vy)*.88;}
+    for(const p of pockets()){if(Math.hypot(b.x-p.x,b.y-p.y)<pocketR-1){if(b.isCue){b.x=table.x+table.w*.27;b.y=table.y+table.h/2;b.vx=0;b.vy=0;messageEl.textContent='Valge pall läks taskusse — see toodi tagasi.';}else{b.active=false;b.vx=0;b.vy=0;potted++;messageEl.textContent='Pall läks taskusse!';}break;}}
+  }
+  for(let i=0;i<balls.length;i++)for(let j=i+1;j<balls.length;j++)if(balls[i].active&&balls[j].active)collide(balls[i],balls[j]);
+ }
+ if(balls.filter(b=>!b.isCue&&b.active).length===0){gameFinished=true;messageEl.textContent='Kõik pallid on taskus! Tubli mäng!';}
+ updateHUD();}
+function draw(){drawTable();for(const b of balls)drawBall(b);drawAim();if(paused){ctx.fillStyle='#050914b8';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 42px Arial';ctx.fillStyle='#65e5ff';ctx.shadowColor='#00cfff';ctx.shadowBlur=14;ctx.fillText('PAUS',canvas.width/2,canvas.height/2);ctx.shadowBlur=0;ctx.font='16px Arial';ctx.fillStyle='#eafaff';ctx.fillText('Vajuta „Jätka mängu”, et jätkata',canvas.width/2,canvas.height/2+42);}}
+function loop(ts){const dt=lastTime?Math.min(ts-lastTime,24):16;lastTime=ts;update(dt);draw();requestAnimationFrame(loop);}
+canvas.addEventListener('pointerdown',e=>{if(paused||gameFinished||moving()||!cueBall.active)return;const pos=getPos(e);if(Math.hypot(pos.x-cueBall.x,pos.y-cueBall.y)<35){dragging=true;pointer=pos;canvas.setPointerCapture(e.pointerId);}});
+canvas.addEventListener('pointermove',e=>{if(dragging){pointer=getPos(e);}});
+canvas.addEventListener('pointerup',()=>{if(!dragging||!pointer)return;const dx=pointer.x-cueBall.x,dy=pointer.y-cueBall.y,len=Math.hypot(dx,dy);if(len>5){const power=Math.min(len*.15,16);cueBall.vx=dx/len*power;cueBall.vy=dy/len*power;shots++;messageEl.textContent='Löök tehtud!';}dragging=false;pointer=null;updateHUD();});
+canvas.addEventListener('pointercancel',()=>{dragging=false;pointer=null;});
+document.getElementById('newGameBtn').addEventListener('click',resetGame);
+document.getElementById('resetBtn').addEventListener('click',resetGame);
+pauseBtn.addEventListener('click',()=>{paused=!paused;messageEl.textContent=paused?'Mäng on pausil.':'Mäng jätkub.';updateHUD();draw();});
+resumeBtn.addEventListener('click',()=>{paused=false;messageEl.textContent='Mäng jätkub.';updateHUD();draw();});
+tableSelect.addEventListener('change',()=>{tableTheme=tableSelect.value;draw();});
+gameSelect.addEventListener('change',()=>{if(gameSelect.value==='pool')return;window.location.href=gameSelect.value;});
+document.getElementById('fullscreenBtn').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch(e){messageEl.textContent='Täisekraani ei saanud avada.';}});
+resetGame();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
+
