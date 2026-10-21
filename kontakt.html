@@ -1,0 +1,354 @@
+
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Kontakt | NEO GAMES</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: #f1f5f9;
+            background:
+                radial-gradient(ellipse at top, #162a43, #0b1120 65%);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 22px 6%;
+            background: #0a1120ee;
+            border-bottom: 1px solid #26364d;
+        }
+
+        .logo {
+            color: white;
+            font-size: 25px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .logo span {
+            color: #00f5ff;
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        nav a {
+            padding: 10px 14px;
+            color: #b6c3d9;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            transition: 0.25s;
+        }
+
+        nav a:hover,
+        nav a.active {
+            color: #55ddff;
+            background: #55ddff12;
+            border-color: #55ddff55;
+            box-shadow: 0 0 15px #55ddff18;
+        }
+
+        main {
+            width: min(100% - 30px, 850px);
+            margin: 45px auto 65px;
+        }
+
+        .hero {
+            padding: 35px;
+            margin-bottom: 25px;
+            border: 1px solid #2a405c;
+            border-radius: 20px;
+            background:
+                radial-gradient(ellipse at top right, #00f5ff20, transparent 50%),
+                linear-gradient(135deg, #182945, #10182a);
+            box-shadow: 0 0 28px #00f5ff12;
+            animation: glow 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 18px #00f5ff10;
+            }
+            to {
+                box-shadow: 0 0 35px #00f5ff2b;
+            }
+        }
+
+        .eyebrow {
+            color: #55ddff;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+
+        h1 {
+            margin: 12px 0;
+            font-size: clamp(30px, 6vw, 44px);
+        }
+
+        h1 span {
+            color: #00f5ff;
+        }
+
+        .hero p,
+        .intro {
+            color: #b6c3d9;
+            line-height: 1.8;
+        }
+
+        .contact-panel {
+            padding: 30px;
+            background: linear-gradient(145deg, #16243a, #101827);
+            border: 1px solid #263b56;
+            border-radius: 20px;
+            box-shadow: 0 10px 35px #00000020;
+        }
+
+        .contact-panel h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #55ddff;
+        }
+
+        .intro {
+            margin-bottom: 25px;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        textarea {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            color: white;
+            font-family: inherit;
+            font-size: 15px;
+            background: #0b1322;
+            border: 1px solid #344761;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #00f5ff;
+            box-shadow: 0 0 12px #00f5ff20;
+        }
+
+        select option {
+            background: #0b1322;
+            color: white;
+        }
+
+        textarea {
+            min-height: 160px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .hint {
+            display: block;
+            margin-top: 7px;
+            color: #8291a8;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 15px 20px;
+            color: #07111d;
+            background: #00f5ff;
+            border: 0;
+            border-radius: 11px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .submit-button:hover {
+            background: #72f9ff;
+            box-shadow: 0 0 24px #00f5ff40;
+            transform: translateY(-2px);
+        }
+
+        .notice {
+            margin-top: 20px;
+            padding: 15px;
+            color: #b6c3d9;
+            background: #0b1322;
+            border: 1px solid #344761;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .status {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .status.visible {
+            display: block;
+        }
+
+        .status.error {
+            color: #fecaca;
+            background: #7f1d1d30;
+            border: 1px solid #ef444466;
+        }
+
+        .status.success {
+            color: #bbf7d0;
+            background: #14532d30;
+            border: 1px solid #22c55e66;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 12px 18px;
+            color: #55ddff;
+            text-decoration: none;
+            border: 1px solid #00f5ff88;
+            border-radius: 10px;
+            transition: 0.25s;
+        }
+
+        .back:hover {
+            background: #00f5ff12;
+        }
+
+        footer {
+            padding: 24px;
+            color: #8291a8;
+            text-align: center;
+            font-size: 13px;
+            border-top: 1px solid #26364d;
+        }
+
+        footer span {
+            color: #55ddff;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 18px;
+            }
+
+            main {
+                margin-top: 25px;
+            }
+
+            .hero,
+            .contact-panel {
+                padding: 22px;
+            }
+
+            nav a {
+                padding: 9px 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">NEO<span>GAMES</span></div>
+
+    <nav aria-label="Peamenüü">
+        <a href="index.html">Avaleht</a>
+        <a href="index.html#mangud">Mängud</a>
+        <a href="info.html">Info</a>
+        <a href="kontakt.html" class="active">Kontakt</a>
+    </nav>
+</header>
+
+<main>
+
+    <section class="hero">
+        <p class="eyebrow">VÕTA ÜHENDUST</p>
+
+        <h1>Kontakt ja <span>tagasiside</span></h1>
+
+        <p>
+            Kas sul on idee uue mängu jaoks? Leidsid vea?
+            Või soovid lihtsalt NEO GAMES-i kohta tagasisidet anda?
+            Kirjuta meile oma mõtetest!
+        </p>
+    </section>
+
+    <section class="contact-panel">
+
+<div style="margin-bottom:28px;padding:22px;border:1px solid #00f5ff66;border-radius:14px;background:#0b1322">
+    <h2 style="margin:0 0 12px;color:#55ddff">
+        ✉️ Võta ühendust
+    </h2>
+
+    <p style="color:#b6c3d9;line-height:1.8">
+        Kas sul on küsimusi, ettepanekuid või ideid uute mängude jaoks?
+        Kirjuta meile e-posti teel!
+    </p>
+
+    <a href="mailto:reamaario@gmail.com"
+       style="display:inline-block;margin-top:8px;padding:13px 18px;background:#00f5ff;color:#07111d;text-decoration:none;font-weight:bold;border-radius:10px;overflow-wrap:anywhere">
+        ✉️ reamaario@gmail.com
+    </a>
+</div>
+
+</section>
+
+    <a class="back" href="index.html">
+        ← Tagasi avalehele
+    </a>
+
+</main>
+
+<footer>
+    © 2026 <span>NEO GAMES</span> — portaal on arendamisel.
+</footer>
+
+
+       
+</body>
+</html>

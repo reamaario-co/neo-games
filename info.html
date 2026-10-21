@@ -1,0 +1,421 @@
+
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info | NEO GAMES</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: #f1f5f9;
+            background:
+                radial-gradient(ellipse at top, #162a43 0%, #0b1120 55%);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
+            padding: 22px 6%;
+            border-bottom: 1px solid #26364d;
+            background: rgba(10, 17, 32, 0.9);
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: white;
+        }
+
+        .logo span {
+            color: #00f5ff;
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        nav a {
+            color: #b6c3d9;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 10px 15px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            transition: 0.25s;
+        }
+
+        nav a:hover {
+            color: #55ddff;
+            background: #55ddff12;
+            border-color: #55ddff55;
+            box-shadow: 0 0 15px #55ddff18;
+        }
+
+        main {
+            width: min(100% - 36px, 1000px);
+            margin: 45px auto 70px;
+        }
+
+        .hero {
+            padding: 45px;
+            margin-bottom: 25px;
+            border: 1px solid #2a405c;
+            border-radius: 22px;
+            background:
+                radial-gradient(
+                    ellipse at 90% 10%,
+                    #00f5ff24,
+                    transparent 45%
+                ),
+                linear-gradient(135deg, #182945, #10182a 65%, #12303e);
+            box-shadow: 0 0 28px #00f5ff12;
+            animation: heroGlow 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes heroGlow {
+            from {
+                box-shadow: 0 0 18px #00f5ff10;
+            }
+
+            to {
+                box-shadow: 0 0 35px #00f5ff2b;
+            }
+        }
+
+        .eyebrow {
+            color: #55ddff;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 15px 0;
+            font-size: clamp(32px, 6vw, 52px);
+            line-height: 1.1;
+        }
+
+        h1 span {
+            color: #00f5ff;
+        }
+
+        .hero p {
+            max-width: 680px;
+            color: #c2cee0;
+            font-size: 17px;
+            line-height: 1.8;
+        }
+
+        .development {
+            padding: 25px;
+            margin: 25px 0 35px;
+            border: 1px solid #55ddff66;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #102238, #111827);
+            box-shadow: 0 0 22px #00f5ff12;
+        }
+
+        .development-label {
+            margin: 0 0 10px;
+            color: #55ddff;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            color: #55ddff;
+            margin: 0 0 15px;
+            font-size: 25px;
+        }
+
+        .development h2 {
+            color: white;
+            font-size: 23px;
+        }
+
+        .development p,
+        .about-text {
+            color: #b6c3d9;
+            font-size: 16px;
+            line-height: 1.9;
+        }
+
+        .section-heading {
+            margin: 40px 0 20px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            padding: 23px;
+            border: 1px solid #263b56;
+            border-radius: 16px;
+            background: linear-gradient(145deg, #16243a, #101827);
+            transition: transform 0.25s, border-color 0.25s,
+                        box-shadow 0.25s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: #00f5ff88;
+            box-shadow: 0 0 20px #00f5ff12;
+        }
+
+        .card .emoji {
+            display: block;
+            margin-bottom: 14px;
+            font-size: 32px;
+        }
+
+        .card h3 {
+            margin: 0 0 10px;
+            color: white;
+            font-size: 19px;
+        }
+
+        .card p {
+            margin: 0;
+            color: #b6c3d9;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .text-section {
+            margin-top: 40px;
+            padding: 25px;
+            border: 1px solid #263b56;
+            border-radius: 16px;
+            background: #111827bb;
+        }
+
+        .text-section h2:not(:first-child) {
+            margin-top: 30px;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 35px;
+            padding: 14px 22px;
+            border: 1px solid #00f5ff;
+            border-radius: 12px;
+            background: #00f5ff12;
+            color: #55ddff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.25s;
+        }
+
+        .back-button:hover {
+            color: #07111d;
+            background: #00f5ff;
+            box-shadow: 0 0 22px #00f5ff44;
+        }
+
+        footer {
+            padding: 25px 18px;
+            border-top: 1px solid #26364d;
+            color: #8291a8;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        footer span {
+            color: #55ddff;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 20px;
+            }
+
+            main {
+                width: min(100% - 24px, 1000px);
+                margin-top: 25px;
+            }
+
+            .hero {
+                padding: 28px 22px;
+            }
+
+            .development,
+            .text-section {
+                padding: 20px;
+            }
+
+            nav a {
+                padding: 9px 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">NEO<span>GAMES</span></div>
+
+        <nav aria-label="Peamenüü">
+            <a href="index.html">Avaleht</a>
+            <a href="index.html#mangud">Mängud</a>
+            <a href="info.html">Info</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <section class="hero">
+            <p class="eyebrow">Tere tulemast</p>
+
+            <h1>Mis on <span>NEO GAMES?</span></h1>
+
+            <p>
+                NEO GAMES on veebipõhine mänguportaal, mille eesmärk
+                on tuua põnevad brauserimängud ühte kohta.
+                Siin saad valida mängu, panna oma oskused proovile
+                ja nautida mängimist otse veebilehitsejas.
+            </p>
+        </section>
+
+        <section class="development">
+            <p class="development-label">🚧 ARENDAMISEL</p>
+
+            <h2>NEO GAMES täieneb pidevalt!</h2>
+
+            <p>
+                NEO GAMES on praegu aktiivses arenduses.
+                Lisame uusi mänge, täiustame olemasolevaid ning
+                töötame selle nimel, et mängukogemus muutuks
+                järjest paremaks. Mõned võimalused võivad olla
+                alles valmimisel või muutuda arenduse käigus.
+            </p>
+        </section>
+
+        <section>
+            <div class="section-heading">
+                <h2>Mida NEO GAMES pakub?</h2>
+
+                <p class="about-text">
+                    Meie eesmärk on pakkuda lihtsat ja mugavat
+                    mängukeskkonda, kus leiab erinevaid mänge
+                    nii kiireks ajaviiteks kui ka enda proovilepanekuks.
+                </p>
+            </div>
+
+            <div class="cards">
+
+                <article class="card">
+                    <span class="emoji">🏎️</span>
+                    <h3>Võidusõit</h3>
+                    <p>
+                        Pane proovile oma reaktsioonikiirus,
+                        väldi takistusi ja püüa saavutada parim tulemus.
+                    </p>
+                </article>
+
+                <article class="card">
+                    <span class="emoji">🎮</span>
+                    <h3>Tegevusmängud</h3>
+                    <p>
+                        Avasta põnevaid väljakutseid, harjuta oma oskusi
+                        ja naudi kiiret mängutegevust.
+                    </p>
+                </article>
+
+                <article class="card">
+                    <span class="emoji">🧠</span>
+                    <h3>Ajutreening</h3>
+                    <p>
+                        Arendamist väärivad ka mõtlemis- ja
+                        strateegiaoskused. Plaanime pakkuda
+                        rohkem mänge ka mõistuse proovilepanekuks.
+                    </p>
+                </article>
+
+                <article class="card">
+                    <span class="emoji">✨</span>
+                    <h3>Neoonkujundus</h3>
+                    <p>
+                        Tume taust, erksad värvid ja helendavad detailid
+                        annavad portaalile moodsa mänguliku välimuse.
+                    </p>
+                </article>
+
+            </div>
+        </section>
+
+        <section class="text-section">
+            <h2>Meie mängud</h2>
+
+            <p class="about-text">
+                NEO GAMES-i mängude hulka kuuluvad näiteks Snake,
+                Neo Pool, Breakout, Trips-traps-trull, Neon Pong,
+                Neon Runner, Glow Hockey ja Neon Racing.
+                Mängude valik võib aja jooksul suureneda.
+            </p>
+
+            <h2>Mis on tulemas?</h2>
+
+            <p class="about-text">
+                Arendame portaali samm-sammult. Tulevikuplaanidesse
+                võivad kuuluda uued mängud, rekordite tabelid,
+                raskusastmed, heliefektid, mängijate nimed ja
+                muud mängimist põnevamaks muutvad võimalused.
+                Uute funktsioonide lisamine sõltub arenduse käigust.
+            </p>
+
+            <h2>Meie põhimõte</h2>
+
+            <p class="about-text">
+                Soovime, et NEO GAMES oleks lihtne kasutada,
+                näeks hea välja nii arvutis kui ka mobiilseadmes
+                ning pakuks võimalust kiiresti mängima asuda.
+                Kuulame ideid ja täiustame portaali järk-järgult.
+            </p>
+
+            <h2>NEO GAMES-i tulevik</h2>
+
+            <p class="about-text">
+                See on alles algus! NEO GAMES-i eesmärk on kasvada
+                mitmekülgseks mänguportaaliks, kus leidub midagi
+                erineva maitsega mängijatele. Arendustöö jätkub
+                ning uusi täiendusi lisandub aja jooksul.
+            </p>
+        </section>
+
+        <a class="back-button" href="index.html">
+            ← Tagasi avalehele
+        </a>
+
+    </main>
+
+    <footer>
+        <p>© 2026 <span>NEO GAMES</span> — portaal on arendamisel.</p>
+    </footer>
+
+</body>
+</html>

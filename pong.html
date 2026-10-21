@@ -1,0 +1,524 @@
+
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon Pong | NEO GAMES</title>
+<style>
+:root {
+  --cyan: #55ddff;
+  --pink: #ff4fe1;
+  --bg: #070b18;
+  --panel: #111b30;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 22px 12px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #f1f5ff;
+  background:
+    radial-gradient(ellipse at 50% 0%, #172b49 0%, var(--bg) 65%);
+  font-family: Arial, sans-serif;
+}
+h1 {
+  margin: 5px 0;
+  color: var(--cyan);
+  letter-spacing: 4px;
+  text-shadow: 0 0 12px #168dbb, 0 0 30px #168dbb;
+}
+.subtitle { color: #aab8d0; text-align: center; }
+.panel {
+  width: min(900px, 96vw);
+  padding: 15px;
+  margin: 12px 0;
+  border: 1px solid #2b4668;
+  border-radius: 13px;
+  background: #0e1728dd;
+}
+.settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+label { color: #c5d5eb; font-size: 14px; }
+select, button, .link {
+  border: 1px solid #365777;
+  border-radius: 8px;
+  padding: 11px 14px;
+  background: var(--panel);
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+button, .link, select { cursor: pointer; }
+button:hover, .link:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 0 14px #55ddff35;
+}
+button.primary {
+  background: var(--cyan);
+  color: #07111f;
+  border-color: var(--cyan);
+}
+button:focus-visible, select:focus-visible, a:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+#score {
+  color: var(--cyan);
+  font-size: clamp(20px, 4vw, 29px);
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 0 0 14px #168dbb;
+}
+#status { min-height: 24px; text-align: center; color: #b7cbe3; }
+canvas {
+  display: block;
+  width: min(900px, 96vw);
+  height: auto;
+  border: 1px solid #376a91;
+  border-radius: 12px;
+  background: #050914;
+  box-shadow: 0 0 15px #0c87ad55, 0 0 40px #9d38ff20;
+  touch-action: none;
+}
+.actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.link { text-decoration: none; }
+.help { max-width: 850px; text-align: center; line-height: 1.7; color: #9eacc5; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>NEON PONG</h1>
+<p class="subtitle">Arkaadklassika uues neoonkuues</p>
+
+<div class="panel">
+  <div class="settings">
+    <label for="difficulty">Raskusaste:</label>
+    <select id="difficulty">
+      <option value="easy">Lihtne</option>
+      <option value="normal" selected>Keskmine</option>
+      <option value="hard">Raske</option>
+    </select>
+    <button id="sound" type="button">🔊 Heli sees</button>
+  </div>
+</div>
+
+<div id="score">Sina 0 : 0 Arvuti</div>
+<canvas id="game" width="900" height="500"
+        aria-label="Neon Pong mänguväli"></canvas>
+<div id="status" role="status">Vajuta „Alusta mängu“.</div>
+
+<div class="actions">
+  <button class="primary" id="start" type="button">▶ Alusta mängu</button>
+  <button id="pause" type="button" disabled>⏸ Paus</button>
+  <button id="reset" type="button">↻ Alusta uuesti</button>
+  <a class="link" href="index.html">← Avalehele</a>
+</div>
+
+<p class="help">
+  Juhtimine: W/S või ↑/↓. Hiire või puuteekraaniga saad samuti oma reketit liigutada.
+  Võitmiseks kogu 5 punkti. Arvuti juhib parempoolset reketit.
+</p>
+
+<script>
+"use strict";
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const scoreEl = document.getElementById("score");
+const statusEl = document.getElementById("status");
+const startBtn = document.getElementById("start");
+const pauseBtn = document.getElementById("pause");
+const resetBtn = document.getElementById("reset");
+const difficultyEl = document.getElementById("difficulty");
+const soundBtn = document.getElementById("sound");
+
+const W = canvas.width;
+const H = canvas.height;
+const WIN_SCORE = 5;
+
+const player = { x: 28, y: 205, w: 13, h: 90 };
+const cpu = { x: W - 41, y: 205, w: 13, h: 90 };
+const ball = { x: W / 2, y: H / 2, r: 9, vx: 5, vy: 2 };
+
+let playerScore = 0;
+let cpuScore = 0;
+let state = "ready";
+let soundOn = true;
+let audio = null;
+let lastTime = 0;
+let animationId = 0;
+let particles = [];
+const keys = Object.create(null);
+
+const levels = {
+  easy:   { cpu: 3.0, ball: 4.6, reaction: 0.70 },
+  normal: { cpu: 4.5, ball: 5.5, reaction: 0.88 },
+  hard:   { cpu: 6.3, ball: 6.3, reaction: 1.00 }
+};
+
+function settings() {
+  return levels[difficultyEl.value] || levels.normal;
+}
+
+function ensureAudio() {
+  if (!audio) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audio = new AudioContext();
+  }
+  if (audio && audio.state === "suspended") audio.resume();
+}
+
+function beep(freq, duration = 0.07, type = "sine", volume = 0.035) {
+  if (!soundOn) return;
+  ensureAudio();
+  if (!audio) return;
+
+  const osc = audio.createOscillator();
+  const gain = audio.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, audio.currentTime);
+  gain.gain.setValueAtTime(volume, audio.currentTime);
+  gain.gain.exponentialRampToValueAtTime(
+    0.001, audio.currentTime + duration
+  );
+  osc.connect(gain);
+  gain.connect(audio.destination);
+  osc.start();
+  osc.stop(audio.currentTime + duration);
+}
+
+function updateScore() {
+  scoreEl.textContent = `Sina ${playerScore} : ${cpuScore} Arvuti`;
+}
+
+function clampPaddles() {
+  player.y = Math.max(0, Math.min(H - player.h, player.y));
+  cpu.y = Math.max(0, Math.min(H - cpu.h, cpu.y));
+}
+
+function resetBall(direction) {
+  ball.x = W / 2;
+  ball.y = H / 2;
+  const speed = settings().ball;
+  ball.vx = speed * direction;
+  ball.vy = (Math.random() * 2 - 1) * speed * 0.55;
+}
+
+function resetGame() {
+  cancelAnimationFrame(animationId);
+  playerScore = 0;
+  cpuScore = 0;
+  particles = [];
+  player.y = H / 2 - player.h / 2;
+  cpu.y = H / 2 - cpu.h / 2;
+  resetBall(Math.random() < 0.5 ? -1 : 1);
+  state = "ready";
+  lastTime = 0;
+  updateScore();
+  statusEl.textContent = "Vajuta „Alusta mängu“.";
+  startBtn.textContent = "▶ Alusta mängu";
+  pauseBtn.disabled = true;
+  draw();
+}
+
+function startGame() {
+  if (state === "over" || state === "playing") return;
+  ensureAudio();
+  state = "playing";
+  statusEl.textContent = "Mäng käib!";
+  startBtn.textContent = "▶ Mäng käib";
+  pauseBtn.disabled = false;
+  pauseBtn.textContent = "⏸ Paus";
+  lastTime = 0;
+  cancelAnimationFrame(animationId);
+  animationId = requestAnimationFrame(loop);
+}
+
+function togglePause() {
+  if (state === "playing") {
+    state = "paused";
+    statusEl.textContent = "Mäng on pausil.";
+    pauseBtn.textContent = "▶ Jätka";
+    startBtn.textContent = "▶ Jätka mängu";
+    draw();
+  } else if (state === "paused") {
+    startGame();
+  }
+}
+
+function burst(x, y, color, count = 14) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 4;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 1,
+      color,
+      size: 2 + Math.random() * 3
+    });
+  }
+}
+
+function point(playerWon) {
+  if (playerWon) {
+    playerScore++;
+    burst(W - 110, H / 2, "#55ddff", 28);
+    beep(660, 0.15, "triangle");
+  } else {
+    cpuScore++;
+    burst(110, H / 2, "#ff4fe1", 28);
+    beep(180, 0.20, "sawtooth", 0.025);
+  }
+  updateScore();
+
+  if (playerScore >= WIN_SCORE || cpuScore >= WIN_SCORE) {
+    state = "over";
+    statusEl.textContent = playerScore >= WIN_SCORE
+      ? "🏆 Sina võitsid! Vajuta „Alusta uuesti“."
+      : "Arvuti võitis. Proovi uuesti!";
+    startBtn.textContent = "▶ Alusta uuesti";
+    pauseBtn.disabled = true;
+    draw();
+    return;
+  }
+
+  resetBall(playerWon ? -1 : 1);
+}
+
+function movePlayer(dt) {
+  const speed = 420;
+  if (keys["w"] || keys["arrowup"]) player.y -= speed * dt;
+  if (keys["s"] || keys["arrowdown"]) player.y += speed * dt;
+  clampPaddles();
+}
+
+function update(dt) {
+  movePlayer(dt);
+
+  const cfg = settings();
+  const target = ball.y - cpu.h / 2;
+  const difference = target - cpu.y;
+  const maxMove = cfg.cpu * 60 * dt;
+
+  if (Math.abs(difference) > 3) {
+    cpu.y += Math.sign(difference) *
+      Math.min(Math.abs(difference), maxMove) * cfg.reaction;
+  }
+  clampPaddles();
+
+  ball.x += ball.vx * 60 * dt;
+  ball.y += ball.vy * 60 * dt;
+
+  if (ball.y - ball.r <= 0) {
+    ball.y = ball.r;
+    ball.vy = Math.abs(ball.vy);
+    beep(420);
+    burst(ball.x, ball.y, "#55ddff", 5);
+  } else if (ball.y + ball.r >= H) {
+    ball.y = H - ball.r;
+    ball.vy = -Math.abs(ball.vy);
+    beep(420);
+    burst(ball.x, ball.y, "#55ddff", 5);
+  }
+
+  const hitPlayer =
+    ball.vx < 0 &&
+    ball.x - ball.r <= player.x + player.w &&
+    ball.x + ball.r >= player.x &&
+    ball.y + ball.r >= player.y &&
+    ball.y - ball.r <= player.y + player.h;
+
+  const hitCpu =
+    ball.vx > 0 &&
+    ball.x + ball.r >= cpu.x &&
+    ball.x - ball.r <= cpu.x + cpu.w &&
+    ball.y + ball.r >= cpu.y &&
+    ball.y - ball.r <= cpu.y + cpu.h;
+
+  if (hitPlayer) {
+    ball.x = player.x + player.w + ball.r;
+    ball.vx = Math.min(Math.abs(ball.vx) + 0.28, 10) ;
+    ball.vy += (ball.y - (player.y + player.h / 2)) / 18;
+    burst(ball.x, ball.y, "#55ddff", 13);
+    beep(520, 0.08, "triangle");
+  }
+
+  if (hitCpu) {
+    ball.x = cpu.x - ball.r;
+    ball.vx = -Math.min(Math.abs(ball.vx) + 0.18, 10);
+    ball.vy += (ball.y - (cpu.y + cpu.h / 2)) / 24;
+    burst(ball.x, ball.y, "#ff4fe1", 13);
+    beep(360, 0.08, "triangle");
+  }
+
+  if (ball.x + ball.r < 0) point(false);
+  else if (ball.x - ball.r > W) point(true);
+
+  for (const p of particles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= 1.8 * dt;
+  }
+  particles = particles.filter(p => p.life > 0);
+}
+
+function drawGlowRect(x, y, w, h, color) {
+  ctx.save();
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 22;
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  const bg = ctx.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, 600);
+  bg.addColorStop(0, "#101c32");
+  bg.addColorStop(1, "#030610");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.strokeStyle = "#2a4260";
+  ctx.setLineDash([10, 13]);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(W / 2, 0);
+  ctx.lineTo(W / 2, H);
+  ctx.stroke();
+  ctx.restore();
+
+  drawGlowRect(player.x, player.y, player.w, player.h, "#55ddff");
+  drawGlowRect(cpu.x, cpu.y, cpu.w, cpu.h, "#ff4fe1");
+
+  ctx.save();
+  ctx.shadowColor = "#55ddff";
+  ctx.shadowBlur = 28;
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  for (const p of particles) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  if (state !== "playing") {
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = state === "over" ? "#ff4fe1" : "#55ddff";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 27px Arial";
+
+    let message = "VALMIS MÄNGIMA?";
+    if (state === "paused") message = "PAUS";
+    if (state === "over") {
+      message = playerScore >= WIN_SCORE ? "SA VÕITSID!" : "ARVUTI VÕITIS!";
+    }
+
+    ctx.fillText(message, W / 2, H / 2);
+    ctx.restore();
+  }
+}
+
+function loop(timestamp) {
+  if (state !== "playing") return;
+
+  const dt = lastTime
+    ? Math.min((timestamp - lastTime) / 1000, 0.033)
+    : 0.016;
+  lastTime = timestamp;
+
+  update(dt);
+  draw();
+
+  if (state === "playing") {
+    animationId = requestAnimationFrame(loop);
+  }
+}
+
+function movePlayerTo(clientY) {
+  const rect = canvas.getBoundingClientRect();
+  player.y = (clientY - rect.top) * H / rect.height - player.h / 2;
+  clampPaddles();
+  if (state !== "playing") draw();
+}
+
+canvas.addEventListener("mousemove", e => movePlayerTo(e.clientY));
+canvas.addEventListener("touchmove", e => {
+  e.preventDefault();
+  movePlayerTo(e.touches[0].clientY);
+}, { passive: false });
+
+document.addEventListener("keydown", e => {
+  const key = e.key.toLowerCase();
+  if (["w", "s", "arrowup", "arrowdown", " "].includes(key)) {
+    e.preventDefault();
+  }
+  keys[key] = true;
+
+  if (key === " " && !e.repeat) {
+    if (state === "playing") togglePause();
+    else if (state === "paused" || state === "ready") startGame();
+  }
+});
+
+document.addEventListener("keyup", e => {
+  keys[e.key.toLowerCase()] = false;
+});
+
+startBtn.addEventListener("click", () => {
+  if (state === "over") resetGame();
+  startGame();
+});
+pauseBtn.addEventListener("click", togglePause);
+resetBtn.addEventListener("click", resetGame);
+
+soundBtn.addEventListener("click", () => {
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? "🔊 Heli sees" : "🔇 Heli väljas";
+  if (soundOn) {
+    ensureAudio();
+    beep(660);
+  }
+});
+
+difficultyEl.addEventListener("change", () => {
+  if (state === "playing" || state === "paused") {
+    statusEl.textContent = "Raskusaste muutub järgmise palli alguses.";
+  }
+});
+
+resetGame();
+</script>
+</body>
+</html>

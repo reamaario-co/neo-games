@@ -1,0 +1,311 @@
+
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GLOW HOCKEY PRO | NEO GAMES</title>
+<style>
+:root{--cyan:#00f5ff;--pink:#ff3fcf;--bg:#070b18}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#14234a,var(--bg) 65%);color:#effaff;font-family:Arial,sans-serif;text-align:center}
+header{padding:16px 10px 6px}
+h1{margin:6px;color:var(--cyan);letter-spacing:4px;text-shadow:0 0 18px var(--cyan)}
+.sub{color:#9cb6d8}
+main{max-width:1050px;margin:auto;padding:12px}
+.panel{background:#101a30;border:1px solid #284365;border-radius:12px;padding:12px;margin:10px 0}
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;text-align:left}
+label{display:block;font-size:13px;color:#b9d3ef;margin-bottom:5px}
+input,select{width:100%;padding:10px;border:1px solid #356080;border-radius:7px;background:#081426;color:white}
+button{background:#102b43;color:var(--cyan);border:1px solid var(--cyan);border-radius:8px;padding:11px 15px;margin:4px;cursor:pointer;font-weight:bold}
+button:hover{box-shadow:0 0 14px #00dfff66;background:#163954}
+button:disabled{opacity:.5;cursor:default}
+#arena{position:relative;width:100%;max-width:900px;margin:12px auto}
+canvas{display:block;width:100%;border:2px solid var(--cyan);border-radius:14px;box-shadow:0 0 25px #00cfff44;touch-action:none;background:#081326}
+.scoreboard{display:flex;justify-content:space-around;gap:10px;align-items:center;margin:10px 0}
+.score{font-size:clamp(22px,4vw,36px);font-weight:bold}
+.blue{color:var(--cyan);text-shadow:0 0 12px var(--cyan)}
+.red{color:var(--pink);text-shadow:0 0 12px var(--pink)}
+#status{min-height:24px;color:#ffdb72;font-weight:bold;margin:8px}
+.controls{display:flex;justify-content:center;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;text-align:left}
+th,td{padding:8px;border-bottom:1px solid #284365}
+th{color:var(--cyan)}
+.small{font-size:12px;color:#9cb6d8}
+.fullscreen #arena{max-width:none}
+@media(max-width:500px){main{padding:6px}.panel{padding:9px}.scoreboard{gap:4px}.settings{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>GLOW HOCKEY PRO</h1>
+<div class="sub">NEO GAMES · NEON ARCADE</div>
+</header>
+<main>
+<section class="panel settings">
+ <div><label for="playerName">Sinu nimi</label><input id="playerName" maxlength="16" value="SINA"></div>
+ <div><label for="cpuName">Vastase nimi</label><input id="cpuName" maxlength="16" value="NEON BOT"></div>
+ <div><label for="difficulty">Raskusaste</label><select id="difficulty"><option value="easy">Lihtne</option><option value="normal" selected>Keskmine</option><option value="hard">Raske</option><option value="expert">Ekspert</option></select></div>
+ <div><label for="duration">Mänguaeg</label><select id="duration"><option value="60">1 minut</option><option value="180" selected>3 minutit</option><option value="300">5 minutit</option><option value="0">Piiramatu</option></select></div>
+ <div><label for="mode">Mängurežiim</label><select id="mode"><option value="cpu">Mängija vs arvuti</option><option value="two">2 mängijat</option></select></div>
+</section>
+
+<div class="scoreboard">
+ <div><div class="blue" id="leftName">SINA</div><div class="score blue" id="leftScore">0</div></div>
+ <div><div class="small">AEG</div><div class="score" id="clock">03:00</div></div>
+ <div><div class="red" id="rightName">NEON BOT</div><div class="score red" id="rightScore">0</div></div>
+</div>
+
+<div id="arena"><canvas id="game" width="900" height="520" aria-label="Glow Hockey mänguväli"></canvas></div>
+<div id="status">Vajuta ALUSTA, et mängida!</div>
+
+<div class="controls">
+ <button id="start">▶ ALUSTA / UUESTI</button>
+ <button id="pause">Ⅱ PAUS</button>
+ <button id="full">⛶ TÄISEKRAAN</button>
+ <button id="sound">🔊 HELI SEES</button>
+</div>
+<div class="small">Arvuti: liiguta hiirt või kasuta W/S. Teine mängija: nooled. Telefonis: liiguta sõrmega oma ketast.</div>
+
+<section class="panel">
+ <h3>🏆 Rekordite tabel</h3>
+ <div id="records"><p class="small">Mängi esimene mäng, et tulemus salvestada.</p></div>
+ <button id="clearRecords">Tühjenda rekordid</button>
+</section>
+<p><a href="index.html" style="color:var(--cyan)">← TAGASI NEO GAMES-I</a></p>
+</main>
+
+<script>
+(()=>{
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+const W=900,H=520,R=18,PR=29,goalH=170;
+let running=false,paused=false,finished=false,review=0,shake=0;
+let leftScore=0,rightScore=0,remaining=180,startedAt=0,lastTime=0;
+let soundOn=true,audio=null,trail=[],sparks=[],records=[];
+let difficulty='normal',mode='cpu';
+const left={x:150,y:H/2,vx:0,vy:0},right={x:W-150,y:H/2,vx:0,vy:0};
+const puck={x:W/2,y:H/2,vx:0,vy:0};
+const cfg={easy:{speed:3.1,aim:.045},normal:{speed:4.2,aim:.075},hard:{speed:5.2,aim:.105},expert:{speed:6.1,aim:.14}};
+let keys={},mouse={x:150,y:H/2},touch={x:150,y:H/2},lastGoal=null;
+function names(){
+ $('leftName').textContent=$('playerName').value.trim()||'SINA';
+ $('rightName').textContent=$('cpuName').value.trim()||'NEON BOT';
+}
+function beep(freq=500,dur=.08){
+ if(!soundOn)return;
+ try{
+  audio=audio||new(window.AudioContext||window.webkitAudioContext)();
+  if(audio.state==='suspended')audio.resume();
+  const o=audio.createOscillator(),g=audio.createGain();
+  o.type='sine';o.frequency.value=freq;g.gain.value=.035;
+  o.connect(g);g.connect(audio.destination);o.start();
+  g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+dur);o.stop(audio.currentTime+dur);
+ }catch(e){}
+}
+function serve(direction=1){
+ puck.x=W/2;puck.y=H/2;
+ const sp=cfg[difficulty].speed;
+ puck.vx=sp*direction;puck.vy=(Math.random()-.5)*sp*.8;
+ trail=[];sparks=[];
+}
+function reset(){
+ names();difficulty=$('difficulty').value;mode=$('mode').value;
+ leftScore=0;rightScore=0;
+ remaining=Number($('duration').value);
+ running=true;paused=false;finished=false;review=0;shake=0;
+ left.x=150;left.y=H/2;right.x=W-150;right.y=H/2;
+ $('pause').textContent='Ⅱ PAUS';
+ $('status').textContent='Mäng käib! Kaitse oma väravat.';
+ $('leftScore').textContent=0;$('rightScore').textContent=0;
+ serve(Math.random()<.5?-1:1);lastTime=performance.now();
+ updateClock();requestAnimationFrame(loop);
+}
+function updateClock(){
+ $('clock').textContent=Number($('duration').value)===0?'∞':
+ Math.max(0,Math.ceil(remaining)).toString().padStart(2,'0').replace(/^(\d+)$/,'$1');
+ if(Number($('duration').value)!==0){
+  const s=Math.max(0,Math.ceil(remaining));
+  $('clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+ }
+}
+function scoreGoal(side){
+ if(side==='left')leftScore++;else rightScore++;
+ $('leftScore').textContent=leftScore;$('rightScore').textContent=rightScore;
+ lastGoal={side,leftScore,rightScore};review=1.2;shake=13;beep( side==='left'?900:300,.22);
+ for(let i=0;i<32;i++)sparks.push({x:side==='left'?W-15:15,y:H/2,vx:(Math.random()-.5)*9,vy:(Math.random()-.5)*9,life:1,color:side==='left'?'#00f5ff':'#ff3fcf'});
+ $('status').textContent='🥅 VÄRAV! '+(side==='left'?$('playerName').value:$('cpuName').value)+' lõi värava!';
+ if(leftScore>=7||rightScore>=7){finish();return;}
+ serve(side==='left'?-1:1);
+}
+function finish(){
+ running=false;finished=true;
+ const winner=leftScore===rightScore?'Viik!':(leftScore>rightScore?($('playerName').value.trim()||'SINA'):($('cpuName').value.trim()||'NEON BOT'));
+ $('status').textContent='🏆 Mäng läbi! '+winner+' · '+leftScore+' : '+rightScore;
+ saveRecord(winner);
+}
+function saveRecord(winner){
+ try{
+  records=JSON.parse(localStorage.getItem('glowHockeyRecords')||'[]');
+  records.push({player:$('playerName').value.trim()||'SINA',opponent:$('cpuName').value.trim()||'NEON BOT',score:leftScore+':'+rightScore,winner,date:new Date().toLocaleDateString('et-EE')});
+  records.sort((a,b)=>(b.winner===b.player)-(a.winner===a.player));
+  records=records.slice(0,10);localStorage.setItem('glowHockeyRecords',JSON.stringify(records));
+ }catch(e){}
+ renderRecords();
+}
+function renderRecords(){
+ try{records=JSON.parse(localStorage.getItem('glowHockeyRecords')||'[]')}catch(e){records=[]}
+ $('records').innerHTML=records.length?'<table><thead><tr><th>Mängija</th><th>Tulemus</th><th>Võitja</th><th>Kuupäev</th></tr></thead><tbody>'+records.map(r=>'<tr><td>'+esc(r.player)+'</td><td>'+esc(r.score)+'</td><td>'+esc(r.winner)+'</td><td>'+esc(r.date)+'</td></tr>').join('')+'</tbody></table>':'<p class="small">Rekordeid veel pole.</p>';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function moveTo(p,x,y,dt){
+ const max=8;
+ p.vx=(x-p.x)*Math.min(1,dt*.018);p.vy=(y-p.y)*Math.min(1,dt*.018);
+ p.x+=p.vx;p.y+=p.vy;
+ p.x=Math.max(PR+8,Math.min(W-PR-8,p.x));
+ p.y=Math.max(PR+8,Math.min(H-PR-8,p.y));
+}
+function collidePaddle(p){
+ let dx=puck.x-p.x,dy=puck.y-p.y,d=Math.hypot(dx,dy),min=R+PR;
+ if(d<min&&d>0){
+  const nx=dx/d,ny=dy/d;
+  puck.x=p.x+nx*min;puck.y=p.y+ny*min;
+  const dot=puck.vx*nx+puck.vy*ny;
+  if(dot<0){puck.vx-=2*dot*nx;puck.vy-=2*dot*ny;}
+  puck.vx+=p.vx*.22;puck.vy+=p.vy*.22;
+  const max=10,sp=Math.hypot(puck.vx,puck.vy);
+  if(sp>max){puck.vx*=max/sp;puck.vy*=max/sp;}
+  shake=4;beep(650+Math.random()*220,.04);
+  for(let i=0;i<5;i++)sparks.push({x:puck.x,y:puck.y,vx:(Math.random()-.5)*5,vy:(Math.random()-.5)*5,life:.5,color:'#ffffff'});
+ }
+}
+function update(dt){
+ if(!running||paused)return;
+ if(review>0){review-=dt/1000;updateParticles(dt);return;}
+ if(Number($('duration').value)!==0){
+  remaining-=dt/1000;
+  if(remaining<=0){remaining=0;updateClock();finish();return;}
+  updateClock();
+ }
+ moveTo(left,mouse.x,mouse.y,dt);
+ if(mode==='two'){
+  let tx=right.x,ty=right.y;
+  if(keys.ArrowLeft)tx-=7;if(keys.ArrowRight)tx+=7;
+  if(keys.ArrowUp)ty-=7;if(keys.ArrowDown)ty+=7;
+  moveTo(right,tx,ty,dt);
+ }else{
+  const c=cfg[difficulty],targetY=puck.y+(puck.vx>0?puck.vy*12:0);
+  let ty=H/2+(puck.y-H/2)*c.aim;
+  if(puck.x>W*.48)ty=targetY;
+  moveTo(right,W-150,ty,dt*c.speed/4);
+ }
+ puck.x+=puck.vx*dt/16.67;puck.y+=puck.vy*dt/16.67;
+ const speed=Math.hypot(puck.vx,puck.vy);
+ if(speed>10){puck.vx*=10/speed;puck.vy*=10/speed;}
+ if(puck.y<R){puck.y=R;puck.vy=Math.abs(puck.vy);beep(400,.03)}
+ if(puck.y>H-R){puck.y=H-R;puck.vy=-Math.abs(puck.vy);beep(400,.03)}
+ if(puck.x<R){
+  if(Math.abs(puck.y-H/2)<goalH/2){scoreGoal('right');return}
+  puck.x=R;puck.vx=Math.abs(puck.vx);
+ }
+ if(puck.x>W-R){
+  if(Math.abs(puck.y-H/2)<goalH/2){scoreGoal('left');return}
+  puck.x=W-R;puck.vx=-Math.abs(puck.vx);
+ }
+ collidePaddle(left);collidePaddle(right);
+ trail.push({x:puck.x,y:puck.y});if(trail.length>12)trail.shift();
+ updateParticles(dt);
+}
+function updateParticles(dt){
+ sparks.forEach(s=>{s.x+=s.vx*dt/16;s.y+=s.vy*dt/16;s.life-=dt/650});
+ sparks=sparks.filter(s=>s.life>0);
+ shake=Math.max(0,shake-dt*.025);
+}
+function glow(color,blur){ctx.shadowColor=color;ctx.shadowBlur=blur}
+function draw(){
+ ctx.save();
+ if(shake>0)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+ ctx.clearRect(-20,-20,W+40,H+40);
+ ctx.fillStyle='#071326';ctx.fillRect(0,0,W,H);
+ // neon rink
+ ctx.strokeStyle='#00eaff';ctx.lineWidth=3;glow('#00dfff',13);ctx.strokeRect(10,10,W-20,H-20);
+ ctx.shadowBlur=0;
+ ctx.strokeStyle='#31536e';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(W/2,12);ctx.lineTo(W/2,H-12);ctx.stroke();
+ ctx.beginPath();ctx.arc(W/2,H/2,82,0,Math.PI*2);ctx.stroke();
+ // goals
+ ctx.fillStyle='#ff3fcf';glow('#ff3fcf',18);ctx.fillRect(0,H/2-goalH/2,13,goalH);
+ ctx.fillStyle='#00f5ff';glow('#00f5ff',18);ctx.fillRect(W-13,H/2-goalH/2,13,goalH);ctx.shadowBlur=0;
+ // puck trail
+ trail.forEach((t,i)=>{ctx.globalAlpha=i/trail.length*.4;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(t.x,t.y,R*(i/trail.length)*.8,0,Math.PI*2);ctx.fill()});ctx.globalAlpha=1;
+ function paddle(p,color){
+  ctx.beginPath();ctx.arc(p.x,p.y,PR,0,Math.PI*2);ctx.fillStyle=color;glow(color,23);ctx.fill();
+  ctx.lineWidth=3;ctx.strokeStyle='#ffffff';ctx.stroke();ctx.shadowBlur=0;
+  ctx.beginPath();ctx.arc(p.x,p.y,PR*.55,0,Math.PI*2);ctx.strokeStyle='#ffffff99';ctx.stroke();
+ }
+ paddle(left,'#00eaff');paddle(right,'#ff3fcf');
+ ctx.beginPath();ctx.arc(puck.x,puck.y,R,0,Math.PI*2);ctx.fillStyle='#ffffff';glow('#ffffff',24);ctx.fill();ctx.shadowBlur=0;
+ sparks.forEach(s=>{ctx.globalAlpha=Math.max(0,s.life);ctx.fillStyle=s.color;ctx.fillRect(s.x,s.y,5,5)});ctx.globalAlpha=1;
+ if(review>0&&lastGoal){
+  ctx.fillStyle='#020713bb';ctx.fillRect(190,190,520,130);
+  ctx.textAlign='center';ctx.fillStyle='#ffe66d';ctx.font='bold 34px Arial';ctx.fillText('🥅 VÄRAV!',W/2,245);
+  ctx.fillStyle='#ffffff';ctx.font='22px Arial';ctx.fillText(lastGoal.leftScore+' : '+lastGoal.rightScore,W/2,286);
+ }
+ if(paused||(!running&&!finished)){
+  ctx.fillStyle='#020713bb';ctx.fillRect(190,200,520,100);
+  ctx.textAlign='center';ctx.fillStyle='#00f5ff';ctx.font='bold 32px Arial';
+  ctx.fillText(paused?'PAUS':finished?'MÄNG LÄBI':'GLOW HOCKEY',W/2,245);
+  ctx.fillStyle='#ffffff';ctx.font='18px Arial';ctx.fillText(paused?'Vajuta JÄTKA':'Vajuta ALUSTA',W/2,276);
+ }
+ ctx.restore();
+}
+function loop(now){
+ if(!running&&!paused)return;
+ const dt=Math.min(40,now-lastTime||16);lastTime=now;
+ update(dt);draw();
+ if(running||paused)requestAnimationFrame(loop);
+}
+function canvasPoint(e){
+ const r=canvas.getBoundingClientRect();
+ return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};
+}
+canvas.addEventListener('pointermove',e=>{
+ const p=canvasPoint(e);
+ if(mode==='two'&&e.pointerType==='touch'){right.x=p.x;right.y=p.y}
+ else {mouse.x=Math.max(PR,Math.min(W/2-PR,p.x));mouse.y=p.y;}
+});
+canvas.addEventListener('pointerdown',e=>{
+ canvas.setPointerCapture?.(e.pointerId);
+ const p=canvasPoint(e);
+ if(mode==='two'&&p.x>W/2){right.x=p.x;right.y=p.y}
+ else{mouse.x=Math.max(PR,Math.min(W/2-PR,p.x));mouse.y=p.y;}
+});
+document.addEventListener('keydown',e=>{
+ keys[e.key]=true;
+ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+});
+document.addEventListener('keyup',e=>keys[e.key]=false);
+$('start').addEventListener('click',reset);
+$('pause').addEventListener('click',()=>{
+ if(!running&&!paused)return;
+ paused=!paused;$('pause').textContent=paused?'▶ JÄTKA':'Ⅱ PAUS';
+ $('status').textContent=paused?'Mäng on pausil.':'Mäng jätkub!';
+ if(!paused){lastTime=performance.now();requestAnimationFrame(loop)}else draw();
+});
+$('full').addEventListener('click',async()=>{
+ try{
+  if(!document.fullscreenElement)await $('arena').requestFullscreen();
+  else await document.exitFullscreen();
+ }catch(e){$('status').textContent='Täisekraan pole selles brauseris saadaval.'}
+});
+$('sound').addEventListener('click',()=>{
+ soundOn=!soundOn;$('sound').textContent=soundOn?'🔊 HELI SEES':'🔇 HELI VÄLJAS';if(soundOn)beep(700);
+});
+$('mode').addEventListener('change',()=>{mode=$('mode').value;$('status').textContent=mode==='two'?'2 mängijat: teine mängija kasutab nooli või puudutust.':'Mängija vs arvuti.'});
+$('clearRecords').addEventListener('click',()=>{
+ if(confirm('Kas soovid kõik rekordid kustutada?')){localStorage.removeItem('glowHockeyRecords');renderRecords();}
+});
+names();renderRecords();serve(1);draw();updateClock();
+})();
+</script>
+</body>
+</html>

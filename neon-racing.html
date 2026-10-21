@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEON RACING | NEO GAMES</title>
+<style>
+:root{--cyan:#00f5ff;--pink:#ff2bd6;--bg:#070b18}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#142345,var(--bg) 70%);color:white;font-family:Arial,sans-serif;text-align:center}
+header{padding:20px 10px}
+h1{margin:0;color:var(--cyan);font-size:clamp(30px,7vw,52px);text-shadow:0 0 18px var(--cyan)}
+header p{color:#a9bbd9}
+.panel{width:min(950px,96%);margin:10px auto;padding:14px;background:#10182b;border:1px solid #263a5c;border-radius:14px}
+.settings{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+input,select,button{padding:11px;border-radius:8px;border:1px solid #395273;background:#0a1224;color:white;font-size:14px}
+button{cursor:pointer;background:#092c40;border-color:var(--cyan);font-weight:bold}
+button:hover{background:#12465b}
+.primary{background:#07515b}
+canvas{display:block;width:100%;max-width:500px;height:auto;margin:auto;border:2px solid var(--cyan);border-radius:10px;background:#080d1b;touch-action:none}
+#status{min-height:26px;color:var(--cyan);font-weight:bold;padding:8px}
+.stats{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;font-size:18px}
+.stats b{color:var(--cyan)}
+table{border-collapse:collapse;width:100%;margin-top:10px}
+td,th{padding:9px;border-bottom:1px solid #263a5c}
+th{color:var(--cyan)}
+.controls{display:flex;justify-content:center;gap:20px;margin:12px auto}
+.controls button{font-size:22px;min-width:90px;touch-action:manipulation}
+.note{font-size:13px;color:#9eb0cc;line-height:1.6}
+@media(max-width:480px){.panel{padding:10px}.controls button{min-width:75px}}
+</style>
+</head>
+<body>
+<header>
+<h1>NEON RACING</h1>
+<p>Võida võidusõit. Väldi liiklust. Purusta rekordid.</p>
+</header>
+
+<section class="panel">
+<div class="settings">
+<label>Nimi 1 <input id="name1" value="Mängija 1" maxlength="16"></label>
+<label>Nimi 2 <input id="name2" value="Mängija 2" maxlength="16"></label>
+<label>Režiim
+<select id="mode"><option value="1">Üks mängija</option><option value="2">Kaks mängijat</option></select>
+</label>
+<label>Auto värv
+  <select id="carColor">
+    <option value="#00f5ff">Neoonsinine</option>
+    <option value="#ff2bd6">Neoonroosa</option>
+    <option value="#39ff14">Neoonroheline</option>
+    <option value="#ff9d00">Neoonoranž</option>
+    <option value="#ffffff">Valge</option>
+  </select>
+</label>Auto 2 värv
+  <select id="carColor2">
+    <option value="#ff2bd6">Neoonroosa</option>
+    <option value="#00f5ff">Neoonsinine</option>
+    <option value="#39ff14">Neoonroheline</option>
+    <option value="#ff9d00">Neoonoranž</option>
+    <option value="#ffffff">Valge</option>
+  </select>
+</label>
+<label>Raskus
+<select id="difficulty"><option value="easy">Lihtne</option><option value="normal" selected>Keskmine</option><option value="hard">Raske</option></select>
+</label>
+<button id="start" class="primary">▶ ALUSTA</button>
+<button id="pause">⏸ PAUS</button>
+<button id="sound">🔊 Heli sees</button>
+<button id="reset">↻ Uuesti</button>
+<button id="full">⛶ Täisekraan</button>
+</div>
+</section>
+
+<section class="panel">
+<div class="stats">
+<span>Punktid: <b id="score">0</b></span>
+<span>Rekord: <b id="best">0</b></span>
+<span>Nitro: <b id="nitro">100%</b></span>
+<div style="width:200px;max-width:100%;height:12px;border:1px solid #00f5ff;border-radius:8px;overflow:hidden;margin:8px auto">
+  <div id="nitroBar" style="height:100%;width:100%;background:#00f5ff;box-shadow:0 0 12px #00f5ff;transition:width .1s"></div>
+</div>
+<span>Aeg: <b id="time">0</b> s</span>
+</div>
+<div id="status">Vajuta ALUSTA ja alusta võidusõitu!</div>
+<canvas id="game" width="500" height="650"></canvas>
+<div class="controls">
+<button id="left">◀ VASAK</button>
+<button id="right">PAREM ▶</button>
+</div>
+<p class="note">
+Üks mängija: A/D või ←/→. Kaks mängijat: mängija 1 kasutab A/D,
+mängija 2 kasutab ←/→. Telefonis kasuta juhtnuppe või puuduta oma auto
+liigutamiseks raja vasakut või paremat poolt.
+</p>
+</section>
+
+<section class="panel">
+<h2>🏆 Rekordite tabel</h2>
+<table>
+<thead><tr><th>#</th><th>Mängija</th><th>Punktid</th><th>Raskus</th></tr></thead>
+<tbody id="records"><tr><td colspan="4">Rekordeid pole veel.</td></tr></tbody>
+</table>
+<button id="clearRecords">Kustuta rekordid</button>
+<p class="note">Rekordid salvestatakse sinu brauserisse selles arvutis.</p>
+</section>
+
+<script>
+(() => {
+"use strict";
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const $=id=>document.getElementById(id);
+const W=canvas.width,H=canvas.height;
+let running=false,paused=false,over=false,soundOn=true;
+let nitro = 100;
+let nitroActive = false;
+let nitroUsed = false;
+let score=0,elapsed=0,last=0,spawn=0,roadOffset=0;
+let cars=[],keys={},audio=null;
+let players=[];
+let touchDirection=0;
+let best=Number(localStorage.getItem("nr_best")||0);
+$("best").textContent=best;
+
+const levels={
+ easy:{speed:230,spawn:1.05,label:"Lihtne"},
+ normal:{speed:290,spawn:.82,label:"Keskmine"},
+ hard:{speed:360,spawn:.62,label:"Raske"}
+};
+
+function initAudio(){
+ if(!audio){
+  try{audio=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}
+ }
+ if(audio&&audio.state==="suspended")audio.resume();
+}
+function beep(freq=440,duration=.1,type="sine"){
+ if(!soundOn)return;
+ initAudio();
+ if(!audio)return;
+ try{
+  const o=audio.createOscillator(),g=audio.createGain();
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(.06,audio.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);
+  o.connect(g);g.connect(audio.destination);
+  o.start();o.stop(audio.currentTime+duration);
+ }catch(e){}
+}
+
+function loadRecords(){
+ try{return JSON.parse(localStorage.getItem("nr_records")||"[]")}catch(e){return []}
+}
+function renderRecords(){
+ const rows=loadRecords();
+ $("records").innerHTML="";
+ if(!rows.length){
+  $("records").innerHTML='<tr><td colspan="4">Rekordeid pole veel.</td></tr>';
+  return;
+ }
+ rows.forEach((r,i)=>{
+  const tr=document.createElement("tr");
+  [i+1,r.name,r.score,r.level].forEach(v=>{
+   const td=document.createElement("td");
+   td.textContent=v;tr.appendChild(td);
+  });
+  $("records").appendChild(tr);
+ });
+}
+function saveRecord(name,value){
+ if(value<=0)return;
+ const rows=loadRecords();
+ rows.push({name,score:value,level:levels[$("difficulty").value].label});
+ rows.sort((a,b)=>b.score-a.score);
+ const top=rows.slice(0,10);
+ localStorage.setItem("nr_records",JSON.stringify(top));
+ renderRecords();
+ if(value>best){
+  best=value;
+  localStorage.setItem("nr_best",String(best));
+  $("best").textContent=best;
+ }
+}
+renderRecords();
+
+function makePlayer(x,color,name,controls){
+ return {x,y:H-115,w:38,h:66,color,name,controls,score:0,alive:true};
+}
+function resetGame(){
+ const mode=$("mode").value;
+ players=[makePlayer(W*.35,$("carColor").value,$("name1").value.trim()||"Mängija 1",["a","d"])];
+if(mode==="2")players.push(makePlayer(W*.65,$("carColor2").value,$("name2").value.trim()||"Mängija 2",["ArrowLeft","ArrowRight"]));
+ cars=[];score=0;elapsed=0;spawn=0;roadOffset=0;
+ over=false;paused=false;running=true;
+ $("score").textContent="0";$("time").textContent="0";
+ $("status").textContent="Sõida ja väldi kokkupõrkeid!";
+ last=performance.now();
+ initAudio();beep(600,.12);
+ requestAnimationFrame(loop);
+}
+function finish(){
+ if(over)return;
+ over=true;running=false;
+ $("status").textContent="🏁 Sõit läbi! Sinu tulemus: "+score+" punkti.";
+ if(players.length===1)saveRecord(players[0].name,score);
+ else players.forEach(p=>saveRecord(p.name,p.score));
+ beep(180,.4,"sawtooth");
+}
+function movePlayers(dt){
+ for(let i=0;i<players.length;i++){
+  const p=players[i];if(!p.alive)continue;
+  const [left,right]=p.controls;
+  const moveSpeed = nitroActive ? 500 : 300;
+if(keys[left])p.x-=moveSpeed*dt;
+  if(keys[right])p.x+=moveSpeed*dt;
+  if(touchDirection&&i===0)p.x+=touchDirection*moveSpeed*dt;
+  p.x=Math.max(57,Math.min(W-57,p.x));
+ }
+}
+function update(dt){
+ const cfg=levels[$("difficulty").value];
+ const baseSpeed = cfg.speed + Math.min(elapsed * 2, 160);
+nitroActive = keys[" "] && nitro > 0;
+const speed = nitroActive ? baseSpeed * 1.8 : baseSpeed;
+
+if (nitroActive) {
+  nitro = Math.max(0, nitro - 35 * dt);
+} else {
+  nitro = Math.min(100, nitro + 12 * dt);
+$("nitro").textContent = Math.ceil(nitro) + "%";
+$("nitroBar").style.width = nitro + "%";
+}
+ elapsed+=dt;roadOffset=(roadOffset+speed*dt)%90;
+ spawn+=dt;
+ if(spawn>=cfg.spawn){
+  spawn=0;
+  const lanes=[105,250,395];
+  const lane=lanes[Math.floor(Math.random()*lanes.length)];
+  cars.push({x:lane,y:-85,w:40,h:68,speed:speed*(.72+Math.random()*.32),
+   color:["#ff315c","#ffc857","#b45cff"][Math.floor(Math.random()*3)]});
+ }
+ for(const car of cars)car.y+=car.speed*dt;
+ cars=cars.filter(c=>c.y<H+100);
+
+ movePlayers(dt);
+ for(const p of players){
+  if(!p.alive)continue;
+  for(const c of cars){
+   if(Math.abs(p.x-c.x)<(p.w+c.w)*.42&&Math.abs(p.y-c.y)<(p.h+c.h)*.42){
+    p.alive=false;beep(100,.3,"sawtooth");
+    $("status").textContent=p.name+" sattus avariisse!";
+   }
+  }
+ }
+ const alive=players.filter(p=>p.alive);
+ if(alive.length===0){finish();return}
+ score+=Math.floor(dt*10*alive.length);
+ players.forEach(p=>{if(p.alive)p.score+=Math.floor(dt*10)});
+ $("score").textContent=score;
+ $("time").textContent=Math.floor(elapsed);
+}
+function drawCar(p){
+ ctx.save();ctx.translate(p.x,p.y);
+ ctx.shadowBlur=18;ctx.shadowColor=p.color;
+ ctx.fillStyle=p.color;
+ ctx.beginPath();ctx.roundRect(-p.w/2,-p.h/2,p.w,p.h,8);ctx.fill();
+ ctx.shadowBlur=0;ctx.fillStyle="#10182b";
+ ctx.fillRect(-p.w*.32,-p.h*.28,p.w*.64,p.h*.25);
+ ctx.fillRect(-p.w*.32,p.h*.08,p.w*.64,p.h*.23);
+ ctx.fillStyle="#dffaff";
+ ctx.fillRect(-p.w*.43,-p.h*.32,5,10);
+ ctx.fillRect(p.w*.43-5,-p.h*.32,5,10);
+ ctx.restore();
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ ctx.fillStyle="#080d1b";ctx.fillRect(0,0,W,H);
+ ctx.fillStyle="#121d31";ctx.fillRect(48,0,W-96,H);
+ ctx.strokeStyle="#00f5ff";ctx.lineWidth=3;
+ ctx.beginPath();ctx.moveTo(48,0);ctx.lineTo(48,H);
+ ctx.moveTo(W-48,0);ctx.lineTo(W-48,H);ctx.stroke();
+ ctx.strokeStyle="#52627b";ctx.lineWidth=3;
+ for(let y=-90+roadOffset;y<H;y+=90){
+  ctx.beginPath();ctx.moveTo(W/2,y);ctx.lineTo(W/2,y+45);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W*.33,y);ctx.lineTo(W*.33,y+45);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W*.67,y);ctx.lineTo(W*.67,y+45);ctx.stroke();
+ }
+ for(const c of cars)drawCar(c);
+ players.forEach(p=>{if(p.alive)drawCar(p)});
+ if(paused){
+  ctx.fillStyle="#000b";ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#00f5ff";ctx.font="bold 38px Arial";
+  ctx.textAlign="center";ctx.fillText("PAUS",W/2,H/2);
+ }
+ if(over){
+  ctx.fillStyle="#000b";ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#00f5ff";ctx.textAlign="center";
+  ctx.font="bold 32px Arial";ctx.fillText("SÕIT LÄBI",W/2,H/2-10);
+  ctx.font="20px Arial";ctx.fillText(score+" punkti",W/2,H/2+30);
+ }
+}
+function loop(now){
+ if(!running)return;
+ if(paused){draw();requestAnimationFrame(loop);return}
+ const dt=Math.min((now-last)/1000,.04);last=now;
+ update(dt);draw();
+ if(running)requestAnimationFrame(loop);
+}
+function togglePause(){
+ if(!running&&!paused)return;
+ paused=!paused;
+ if(paused){running=false;$("status").textContent="Mäng on pausil."}
+ else{running=true;last=performance.now();$("status").textContent="Sõit jätkub!";requestAnimationFrame(loop)}
+ draw();
+}
+$("start").addEventListener("click",resetGame);
+$("reset").addEventListener("click",resetGame);
+$("pause").addEventListener("click",togglePause);
+$("sound").addEventListener("click",()=>{
+ soundOn=!soundOn;
+ $("sound").textContent=soundOn?"🔊 Heli sees":"🔇 Heli väljas";
+ if(soundOn)beep(550,.1);
+});
+$("full").addEventListener("click",async()=>{
+ try{
+  if(!document.fullscreenElement)await document.documentElement.requestFullscreen();
+  else await document.exitFullscreen();
+ }catch(e){$("status").textContent="Täisekraan pole selles brauseris saadaval."}
+});
+$("clearRecords").addEventListener("click",()=>{
+ if(confirm("Kas soovid kõik rekordid kustutada?")){
+  localStorage.removeItem("nr_records");
+  localStorage.removeItem("nr_best");best=0;
+  $("best").textContent="0";renderRecords();
+ }
+});
+
+window.addEventListener("keydown",e=>{
+ if(["ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();
+ keys[e.key.length===1?e.key.toLowerCase():e.key]=true;
+ if(e.key.toLowerCase()==="p"&&!e.repeat)togglePause();
+});
+window.addEventListener("keyup",e=>{
+ keys[e.key.length===1?e.key.toLowerCase():e.key]=false;
+});
+function holdButton(id,direction){
+ const b=$(id);
+ const down=e=>{e.preventDefault();touchDirection=direction};
+ const up=e=>{e.preventDefault();if(touchDirection===direction)touchDirection=0};
+ b.addEventListener("pointerdown",down);
+ ["pointerup","pointercancel","pointerleave"].forEach(ev=>b.addEventListener(ev,up));
+}
+holdButton("left",-1);holdButton("right",1);
+canvas.addEventListener("pointerdown",e=>{
+ const r=canvas.getBoundingClientRect();
+ const x=(e.clientX-r.left)*W/r.width;
+ touchDirection=x<W/2?-1:1;
+});
+canvas.addEventListener("pointerup",()=>touchDirection=0);
+canvas.addEventListener("pointercancel",()=>touchDirection=0);
+draw();
+})();
+</script>
+</body>
+</html>
