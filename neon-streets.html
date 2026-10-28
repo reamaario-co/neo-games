@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Streets | NEO GAMES</title>
+<meta name="theme-color" content="#050a16">
+<style>
+:root{--bg:#050a16;--cyan:#55ddff;--text:#f3f7ff;--muted:#a7b8d3}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Inter,Arial,sans-serif;color:var(--text);line-height:1.5;background:radial-gradient(ellipse at 50% -15%,#12396a 0,transparent 48%),var(--bg)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px max(5vw,20px);border-bottom:1px solid #55ddff25;background:#050b18e8}
+.logo{color:#fff;text-decoration:none;font-size:22px;font-weight:900;letter-spacing:1.5px}.logo span{color:var(--cyan)}
+.back{color:#c4d3e9;text-decoration:none;font-size:14px;font-weight:700;padding:8px 14px;border:1px solid #55ddff48;border-radius:9px}
+.back:hover,.back:focus-visible{color:var(--cyan);background:#55ddff0c}
+main{max-width:940px;margin:auto;padding:24px 16px 50px}
+h1{margin:0 0 4px;font-size:clamp(28px,6vw,42px);letter-spacing:-1px}
+.sub{margin:0 0 16px;color:var(--muted)}
+.hud{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.stat{flex:1;min-width:90px;padding:8px 12px;border:1px solid #294768;border-radius:10px;background:#0b1830}
+.stat small{display:block;color:var(--muted);font-size:12px}.stat b{font-size:20px;color:var(--cyan)}
+.bar{height:8px;margin-top:8px;border-radius:4px;background:#12263f;overflow:hidden}.bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff5fa8,#55ddff);transition:width .15s}
+.mission{margin-bottom:12px;padding:10px 14px;border:1px solid #55ddff55;border-radius:10px;background:#0b1830;color:#c9f6ff}
+.stage{position:relative;border:1px solid #55ddff55;border-radius:14px;overflow:hidden;background:#07101f;box-shadow:0 0 30px #168bff22}
+.stage:fullscreen{border:0;border-radius:0;background:#050a16}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.stage:fullscreen canvas{height:100%}
+.fs{position:absolute;left:10px;top:10px;z-index:3;padding:7px 12px;border:1px solid #55ddff72;border-radius:8px;background:#050a16c0;color:var(--cyan);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.fs:hover{background:#0c2238}.fs:focus-visible,.btn:focus-visible,.city:focus-visible,.pad button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.overlay{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center;background:#050a16e6;overflow:auto}
+.overlay h2{margin:0;font-size:clamp(24px,5vw,36px)}.overlay p{margin:0;max-width:480px;color:var(--muted)}
+.cities{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:640px}
+.city{flex:1;min-width:150px;padding:10px 14px;border:1px solid #294768;border-radius:10px;background:#0b1830;color:#c4d3e9;font:inherit;font-weight:700;cursor:pointer;text-align:left}
+.city small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.city.active{border-color:var(--cyan);color:var(--cyan);background:#0c2238;box-shadow:0 0 18px #55ddff30}
+.btn{padding:13px 24px;border:1px solid #8ceaff;border-radius:9px;background:linear-gradient(110deg,#55ddff,#a3efff);color:#041020;font-size:14px;font-weight:900;cursor:pointer}
+.btn.alt{background:#0b1830;color:var(--cyan);border-color:#55ddff72}
+.btn:hover{box-shadow:0 0 26px #55ddff60}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.pad{display:none;position:absolute;left:10px;right:10px;bottom:10px;z-index:1;justify-content:space-between;pointer-events:none}
+.pad div{display:flex;gap:10px}.pad button{pointer-events:auto;width:70px;height:58px;border:1px solid #55ddff72;border-radius:12px;background:#0b1830cc;color:var(--cyan);font-size:22px;touch-action:none;user-select:none}
+.pad button.on{background:#12396a}
+.keys{margin:12px 0 0;color:var(--muted);font-size:14px}
+[hidden]{display:none!important}
+@media(pointer:coarse){.pad{display:flex}.keys{display:none}}
+</style>
+</head>
+<body>
+<header class="top"><a class="logo" href="index.html">NEO<span> GAMES</span></a><a class="back" href="index.html">Tagasi mängude juurde</a></header>
+<main>
+<h1>Neon Streets</h1>
+<p class="sub">Vali linn, vii pakid õigeks ajaks kohale ja hoia jalakäijatest eemale.</p>
+<div class="hud">
+<div class="stat"><small>Punktid</small><b id="score">0</b></div>
+<div class="stat"><small>Aeg</small><b id="time">0 s</b></div>
+<div class="stat"><small>Kiirus</small><b id="speed">0</b></div>
+<div class="stat"><small>Rekord</small><b id="best">0</b></div>
+<div class="stat"><small>Auto seisukord</small><div class="bar"><i id="hp"></i></div></div>
+</div>
+<div class="mission" id="mission">Vali linn ja alusta sõitu.</div>
+<div class="stage" id="stage">
+<canvas id="c" width="900" height="540" aria-label="Mängulaud"></canvas>
+<button class="fs" id="fsBtn" type="button">Täisekraan</button>
+<div class="pad" aria-label="Puutejuhtimine">
+<div><button type="button" data-k="left" aria-label="Vasakule">◀</button><button type="button" data-k="right" aria-label="Paremale">▶</button></div>
+<div><button type="button" data-k="down" aria-label="Pidur">▼</button><button type="button" data-k="up" aria-label="Gaas">▲</button></div>
+</div>
+<div class="overlay" id="startBox">
+<h2>Neon Streets</h2>
+<p>Võta kollane pakk peale ja vii see sinise märgini. Autod ja seinad kahjustavad sinu autot. Jalakäijatele otsasõit maksab 50 punkti, nii et sõida ettevaatlikult.</p>
+<div class="cities" id="cities" role="group" aria-label="Linn"></div>
+<button class="btn" id="startBtn" type="button">Alusta sõitu</button>
+</div>
+<div class="overlay" id="endBox" hidden>
+<h2>Mäng läbi</h2>
+<p id="endText"></p>
+<div class="row"><button class="btn" id="againBtn" type="button">Proovi uuesti</button><button class="btn alt" id="menuBtn" type="button">Vali linn</button></div>
+</div>
+</div>
+<p class="keys">Juhtimine: nooleklahvid või WASD (ülemine gaas, alumine pidur ja tagurdus). Täisekraan: F-klahv.</p>
+</main>
+<script>
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),stage=document.getElementById("stage");
+const $=id=>document.getElementById(id);
+const scoreEl=$("score"),timeEl=$("time"),speedEl=$("speed"),bestEl=$("best"),hpEl=$("hp"),missionEl=$("mission");
+let VW=900,VH=540;
+const cities=[
+ {id:"neon",name:"Neon City",desc:"Klassikaline kesklinn",N:8,P:400,R:130,traffic:22,peds:30,pal:{ground:"#101c33",block:"#08111f",edge:"#2a6fa8",inner:"#1a3e63",fill:"#55ddff14",lane:"#55ddff30",walk:"#1d3558"}},
+ {id:"bay",name:"Magenta Bay",desc:"Kompaktne linn, tihe liiklus",N:6,P:340,R:110,traffic:26,peds:26,pal:{ground:"#1d1030",block:"#10081d",edge:"#b04fd6",inner:"#6a2a8a",fill:"#ff5fa814",lane:"#ff5fa840",walk:"#33194f"}},
+ {id:"port",name:"Emerald Port",desc:"Suur sadamalinn, laiad teed",N:10,P:460,R:150,traffic:26,peds:36,pal:{ground:"#0b2220",block:"#06130f",edge:"#2fbf8a",inner:"#1b7557",fill:"#5dffb014",lane:"#5dffb035",walk:"#17433a"}}
+];
+let city=cities[0],W,P,R,N,pal;
+const keys={up:false,down:false,left:false,right:false};
+const map={ArrowUp:"up",KeyW:"up",ArrowDown:"down",KeyS:"down",ArrowLeft:"left",KeyA:"left",ArrowRight:"right",KeyD:"right"};
+addEventListener("keydown",e=>{
+  if(map[e.code]){keys[map[e.code]]=true;e.preventDefault()}
+  if(e.code==="KeyF")toggleFs();
+});
+addEventListener("keyup",e=>{if(map[e.code]){keys[map[e.code]]=false;e.preventDefault()}});
+document.querySelectorAll(".pad button").forEach(b=>{
+  const k=b.dataset.k;
+  const on=e=>{keys[k]=true;b.classList.add("on");e.preventDefault()};
+  const off=()=>{keys[k]=false;b.classList.remove("on")};
+  b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);b.addEventListener("pointerleave",off);b.addEventListener("pointercancel",off);
+});
+let bests={};try{bests=JSON.parse(localStorage.getItem("neoStreetsBests"))||{}}catch(e){}
+const saveBests=()=>{try{localStorage.setItem("neoStreetsBests",JSON.stringify(bests))}catch(e){}};
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const isRoad=(x,y)=>x>0&&y>0&&x<W&&y<W&&((x%P)<R||(y%P)<R);
+const colors=["#ff5fa8","#b07bff","#5dffb0","#ffb347","#ff6b6b","#7aa7ff"];
+const pedCols=["#ffe8a3","#ffc4d6","#c8f0ff","#d9ffc8","#ffd1a3"];
+let car,traffic,peds,mission,score,hp,running=false,last=0,timeLeft=0,flash=0,note="",noteT=0;
+function setCity(c){
+  city=c;({N,P,R}=c);W=N*P;pal=c.pal;
+  document.querySelectorAll(".city").forEach(b=>b.classList.toggle("active",b.dataset.id===c.id));
+  bestEl.textContent=bests[c.id]||0;
+}
+cities.forEach(c=>{
+  const b=document.createElement("button");
+  b.type="button";b.className="city";b.dataset.id=c.id;
+  b.innerHTML=c.name+"<small>"+c.desc+"</small>";
+  b.addEventListener("click",()=>{setCity(c);reset();draw();hud()});
+  $("cities").appendChild(b);
+});
+function randSpot(){
+  const i=Math.floor(rnd(0,N)),t=rnd(80,W-80);
+  return Math.random()<.5?{x:i*P+R/2,y:t}:{x:t,y:i*P+R/2};
+}
+function newMission(){
+  const a=randSpot();let b=randSpot();
+  while(Math.hypot(a.x-b.x,a.y-b.y)<W/4)b=randSpot();
+  mission={stage:0,a,b};
+  timeLeft=Math.max(90,Math.hypot(car.x-a.x,car.y-a.y)/160+Math.hypot(a.x-b.x,a.y-b.y)/160+45);
+  missionEl.textContent="Mine kollase paki juurde.";
+}
+function reset(){
+  const m=Math.floor(N/2);
+  car={x:R/2+P*m,y:R/2+P*m,a:0,v:0};
+  traffic=[];
+for(let i=0;i<Math.floor(city.traffic*0.55);i++){    
+const dir=Math.random()<.5?1:-1,line=Math.floor(rnd(0,N));
+    traffic.push({
+  h:Math.random()<.5,
+  dir,
+  lane:line*P+R/2+dir*22,
+  p:rnd(60,W-60),
+  sp:rnd(110,200),
+  col:colors[i%colors.length],
+  stop:0,
+  targetLane:null,
+  changingLane:false
+});;
+  }
+  peds=[];
+  for(let i=0;i<city.peds;i++){
+    const side=Math.random()<.5?1:-1;
+    peds.push({h:Math.random()<.5,line:Math.floor(rnd(0,N)),p:rnd(60,W-60),dir:Math.random()<.5?1:-1,sp:rnd(28,48),off:side*(R/2-8),target:null,hurt:0,col:pedCols[i%pedCols.length]});
+  }
+  score=0;hp=100;note="";noteT=0;newMission();
+}
+const tpos=t=>t.h?{x:t.p,y:t.lane}:{x:t.lane,y:t.p};
+
+
+
+const ppos=q=>{const c=q.line*P+R/2+q.off;return q.h?{x:q.p,y:q.line*P+R/2+q.off}:{x:q.line*P+R/2+q.off,y:q.p}};
+function say(t){note=t;noteT=2.2;missionEl.textContent=t}
+function hit(d){hp-=d;flash=.25;if(hp<=0){hp=0;end()}}
+function update(dt){
+  if(keys.up)car.v+=380*dt;
+  if(keys.down)car.v-=(car.v>0?620:260)*dt;
+  car.v-=car.v*Math.min(1,.9*dt);
+  car.v=Math.max(-180,Math.min(520,car.v));
+  const steer=(keys.right?1:0)-(keys.left?1:0);
+  car.a+=steer*2.6*dt*Math.max(-1,Math.min(1,car.v/180));
+  const nx=car.x+Math.cos(car.a)*car.v*dt,ny=car.y+Math.sin(car.a)*car.v*dt;
+  let ok=true;
+  for(const[dx,dy]of[[22,11],[22,-11],[-22,11],[-22,-11]]){
+    const px=nx+Math.cos(car.a)*dx-Math.sin(car.a)*dy,py=ny+Math.sin(car.a)*dx+Math.cos(car.a)*dy;
+    if(!isRoad(px,py)){ok=false;break}
+  }
+  if(ok){car.x=nx;car.y=ny}else{const imp=Math.abs(car.v);if(imp>60)hit(imp/45);car.v*=-.35}
+  for(const t of traffic){
+    const q=tpos(t);
+    const dx=car.x-q.x;
+    const dy=car.y-q.y;
+    const dist=Math.hypot(dx,dy);
+
+    // Kontrolli, kas mängija on samal sõidurajal ja NPC-auto ees.
+    const sameLane=t.h
+      ? Math.abs(car.y-q.y)<R*0.38
+      : Math.abs(car.x-q.x)<R*0.38;
+    const ahead=t.h
+      ? (t.dir>0 ? dx>0 : dx<0)
+      : (t.dir>0 ? dy>0 : dy<0);
+
+    // NPC aeglustab enne mängija autot, et vältida tagant otsasõitu.
+    if(t.stop>0){
+      t.stop=Math.max(0,t.stop-dt);
+    }
+    if(sameLane&&ahead&&dist<95){
+      // Hoia auto paigal seni, kuni ees on liiga vähe ruumi.
+      t.stop=Math.max(t.stop,0.12);
+    }else if(t.stop<=0){
+      t.p+=t.dir*t.sp*dt;
+    }
+
+    if(t.p<30)t.p=W-30;
+    if(t.p>W-30)t.p=30;
+
+    // Väldi kokkupõrke korduvat registreerimist samal hetkel.
+    const updated=tpos(t);
+    if(Math.hypot(updated.x-car.x,updated.y-car.y)<30&&t.stop<=0){
+      t.stop=1.2;
+      hit(2+Math.abs(car.v)/100);
+      const ang=Math.atan2(car.y-updated.y,car.x-updated.x);
+      car.v*=0.5;
+      const bx=car.x+Math.cos(ang)*14;
+      const by=car.y+Math.sin(ang)*14;
+      if(isRoad(bx,by)){
+        car.x=bx;
+        car.y=by;
+      }
+    }
+  }
+  for(const q of peds){
+    if(q.hurt>0){q.hurt-=dt}
+    else if(q.target!==null){
+      const s=Math.sign(q.target-q.off);q.off+=s*52*dt;
+      if(Math.abs(q.off-q.target)<2){q.off=q.target;q.target=null}
+    }else{
+      q.p+=q.dir*q.sp*dt;
+      if(q.p<30||q.p>W-30)q.dir*=-1;
+      if(Math.random()<.18*dt)q.target=-Math.sign(q.off)*(R/2-8);
+    }
+    const o=ppos(q);
+    if(q.hurt<=0&&Math.hypot(o.x-car.x,o.y-car.y)<24&&Math.abs(car.v)>20){
+      q.hurt=2.5;score=Math.max(0,score-50);car.v*=.8;flash=.15;say("Jalakäija! -50 punkti.");
+    }
+  }
+  const tg=mission.stage===0?mission.a:mission.b;
+  if(Math.hypot(tg.x-car.x,tg.y-car.y)<55){
+    if(mission.stage===0){mission.stage=1;say("Pakk peal! Vii see sinise märgini.")}
+    else{
+      const pts=100+Math.floor(timeLeft*5);score+=pts;hp=Math.min(100,hp+12);
+      if(score>(bests[city.id]||0)){bests[city.id]=score;bestEl.textContent=score;saveBests()}
+      newMission();say("Kohal! +"+pts+" punkti. Järgmine pakk ootab.");
+    }
+  }
+  timeLeft-=dt;
+  if(timeLeft<=0){hit(20);newMission();say("Aeg sai otsa ja auto sai kahjustada. Uus pakk ootab.")}
+  if(flash>0)flash-=dt;
+  if(noteT>0){noteT-=dt}
+}
+function carShape(x,y,a,col,w,l){
+  ctx.save();ctx.translate(x,y);ctx.rotate(a);
+  ctx.shadowColor=col;ctx.shadowBlur=14;ctx.fillStyle=col;
+  ctx.beginPath();ctx.roundRect(-l/2,-w/2,l,w,6);ctx.fill();
+  ctx.shadowBlur=0;ctx.fillStyle="#06101f";ctx.fillRect(l*.05,-w/2+3,l*.22,w-6);
+  ctx.restore();
+}
+function draw(){
+  const cx=car.x-VW/2,cy=car.y-VH/2;
+  ctx.fillStyle="#050a16";ctx.fillRect(0,0,VW,VH);
+  ctx.save();ctx.translate(-cx,-cy);
+  ctx.fillStyle=pal.ground;ctx.fillRect(0,0,W,W);
+  ctx.fillStyle=pal.walk;
+  for(let i=0;i<N;i++){
+    const a=i*P;
+    ctx.fillRect(a,0,12,W);ctx.fillRect(a+R-12,0,12,W);
+    ctx.fillRect(0,a,W,12);ctx.fillRect(0,a+R-12,W,12);
+  }
+  ctx.strokeStyle=pal.lane;ctx.lineWidth=2;ctx.setLineDash([22,26]);
+  for(let i=0;i<N;i++){
+    const c=i*P+R/2;
+    ctx.beginPath();ctx.moveTo(c,0);ctx.lineTo(c,W);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,c);ctx.lineTo(W,c);ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+    const x=i*P+R,y=j*P+R,w=P-R,h=P-R;
+    if(x+w<cx||x>cx+VW||y+h<cy||y>cy+VH)continue;
+    ctx.fillStyle=pal.block;ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle=pal.edge;ctx.lineWidth=2;ctx.strokeRect(x+4,y+4,w-8,h-8);
+    ctx.strokeStyle=pal.inner;ctx.strokeRect(x+24,y+24,w-48,h-48);
+    ctx.fillStyle=pal.fill;ctx.fillRect(x+24,y+24,w-48,h-48);
+  }
+  const pulse=1+Math.sin(performance.now()/180)*.15;
+  const tg=mission.stage===0?mission.a:mission.b,mc=mission.stage===0?"#ffd84d":"#55ddff";
+  ctx.shadowColor=mc;ctx.shadowBlur=22;ctx.strokeStyle=mc;ctx.lineWidth=4;ctx.beginPath();ctx.arc(tg.x,tg.y,34*pulse,0,7);ctx.stroke();ctx.fillStyle=mc+"55";ctx.fill();ctx.shadowBlur=0;
+  for(const q of peds){
+    const o=ppos(q);
+    if(o.x<cx-20||o.x>cx+VW+20||o.y<cy-20||o.y>cy+VH+20)continue;
+    ctx.globalAlpha=q.hurt>0?(Math.floor(performance.now()/120)%2?.35:.9):1;
+    ctx.fillStyle=q.col;ctx.shadowColor=q.col;ctx.shadowBlur=8;
+    ctx.beginPath();ctx.arc(o.x,o.y,6,0,7);ctx.fill();
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
+  }
+  for(const t of traffic){const q=tpos(t);carShape(q.x,q.y,t.h?(t.dir>0?0:Math.PI):(t.dir>0?Math.PI/2:-Math.PI/2),t.col,22,46)}
+  carShape(car.x,car.y,car.a,"#55ddff",24,48);
+  ctx.restore();
+  const dx=tg.x-car.x,dy=tg.y-car.y;
+  if(Math.abs(dx)>VW/2-30||Math.abs(dy)>VH/2-30){
+    const ang=Math.atan2(dy,dx),m=Math.min(VW,VH)/2-34,ex=VW/2+Math.cos(ang)*m*(VW/VH>1?Math.min(VW/VH,1.6):1),ey=VH/2+Math.sin(ang)*m;
+    ctx.save();ctx.translate(Math.max(20,Math.min(VW-20,ex)),Math.max(20,Math.min(VH-20,ey)));ctx.rotate(ang);ctx.fillStyle=mc;
+    ctx.beginPath();ctx.moveTo(14,0);ctx.lineTo(-10,-11);ctx.lineTo(-10,11);ctx.fill();ctx.restore();
+  }
+  const ms=Math.min(150,VH*.28),mx=VW-ms-12,my=12,k=ms/W;
+  ctx.fillStyle="#050a16d0";ctx.fillRect(mx,my,ms,ms);ctx.strokeStyle="#55ddff66";ctx.lineWidth=1;ctx.strokeRect(mx,my,ms,ms);
+  ctx.fillStyle=pal.edge;
+  for(let i=0;i<N;i++){ctx.fillRect(mx+i*P*k,my,Math.max(2,R*k),ms);ctx.fillRect(mx,my+i*P*k,ms,Math.max(2,R*k))}
+  ctx.fillStyle=mc;ctx.beginPath();ctx.arc(mx+tg.x*k,my+tg.y*k,4,0,7);ctx.fill();
+  ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(mx+car.x*k,my+car.y*k,3,0,7);ctx.fill();
+  if(document.fullscreenElement){
+    ctx.fillStyle="#050a16c0";ctx.fillRect(10,52,300,76);
+    ctx.fillStyle="#f3f7ff";ctx.font="bold 16px Arial";
+    ctx.fillText("Punktid: "+score+"   Aeg: "+Math.max(0,Math.ceil(timeLeft))+" s",22,76);
+    ctx.fillText("Kiirus: "+Math.round(Math.abs(car.v)/5)+" km/h",22,98);
+    ctx.fillStyle="#12263f";ctx.fillRect(22,108,276,8);ctx.fillStyle="#55ddff";ctx.fillRect(22,108,276*hp/100,8);
+    if(noteT>0){ctx.font="bold 18px Arial";ctx.textAlign="center";ctx.fillStyle="#c9f6ff";ctx.fillText(note,VW/2,VH-30);ctx.textAlign="left"}
+  }
+  if(flash>0){ctx.fillStyle="rgba(255,60,120,"+(flash*1.4)+")";ctx.fillRect(0,0,VW,VH)}
+}
+function hud(){
+  scoreEl.textContent=score;timeEl.textContent=Math.max(0,Math.ceil(timeLeft))+" s";
+  speedEl.textContent=Math.round(Math.abs(car.v)/5)+" km/h";hpEl.style.width=hp+"%";
+}
+function loop(t){
+  if(!running)return;
+  const dt=Math.min(.05,(t-last)/1000);last=t;
+  update(dt);if(running){draw();hud()}
+  requestAnimationFrame(loop);
+}
+function begin(){
+  reset();running=true;last=performance.now();
+  $("startBox").hidden=true;$("endBox").hidden=true;
+  requestAnimationFrame(loop);
+}
+function end(){
+  running=false;
+  $("endText").textContent=city.name+": "+score+" punkti. Linna rekord: "+(bests[city.id]||0)+".";
+  $("endBox").hidden=false;draw();hud();
+}
+function toggleFs(){
+  if(document.fullscreenElement)document.exitFullscreen();
+  else if(stage.requestFullscreen)stage.requestFullscreen().catch(()=>{});
+}
+function resize(){
+  if(document.fullscreenElement){VW=stage.clientWidth||innerWidth;VH=stage.clientHeight||innerHeight}
+  else{VW=900;VH=540}
+  cv.width=VW;cv.height=VH;
+  $("fsBtn").textContent=document.fullscreenElement?"Välju täisekraanilt":"Täisekraan";
+  if(car)draw();
+}
+if(!stage.requestFullscreen)$("fsBtn").hidden=true;
+$("fsBtn").addEventListener("click",toggleFs);
+document.addEventListener("fullscreenchange",()=>setTimeout(resize,60));
+addEventListener("resize",()=>{if(document.fullscreenElement)resize()});
+$("startBtn").addEventListener("click",begin);
+$("againBtn").addEventListener("click",begin);
+$("menuBtn").addEventListener("click",()=>{$("endBox").hidden=true;$("startBox").hidden=false;reset();draw();hud()});
+setCity(cities[0]);reset();draw();hud();
+</script>
+</body>
+</html>
