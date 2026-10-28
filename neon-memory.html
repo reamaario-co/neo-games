@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Memory | NEO GAMES</title>
+<meta name="theme-color" content="#050a16">
+<style>
+:root{--bg:#050a16;--cyan:#55ddff;--blue:#167dff;--text:#f3f7ff;--muted:#a7b8d3;--cols:4}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Inter,Arial,sans-serif;color:var(--text);line-height:1.5;background:radial-gradient(ellipse at 50% -15%,#12396a 0,transparent 48%),var(--bg)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px max(5vw,20px);border-bottom:1px solid #55ddff25;background:#050b18e8}
+.logo{color:#fff;text-decoration:none;font-size:22px;font-weight:900;letter-spacing:1.5px}.logo span{color:var(--cyan)}
+.back{color:#c4d3e9;text-decoration:none;font-size:14px;font-weight:700;padding:8px 14px;border:1px solid #55ddff48;border-radius:9px}
+.back:hover,.back:focus-visible{color:var(--cyan);background:#55ddff0c}
+main{max-width:700px;margin:auto;padding:28px 20px 60px}
+h1{margin:0 0 6px;font-size:clamp(30px,6vw,44px);letter-spacing:-1px}
+.sub{margin:0 0 18px;color:var(--muted)}
+.levels{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.level{flex:1;min-width:120px;padding:10px 12px;border:1px solid #294768;border-radius:10px;background:#0b1830;color:#c4d3e9;font:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:left}
+.level small{display:block;color:var(--muted);font-size:12px;font-weight:400}
+.level:hover{border-color:#55ddff80}
+.level.active{border-color:var(--cyan);color:var(--cyan);background:#0c2238;box-shadow:0 0 18px #55ddff30}
+.level:focus-visible,.btn:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.stat{flex:1;min-width:100px;padding:10px 14px;border:1px solid #294768;border-radius:10px;background:#0b1830}
+.stat small{display:block;color:var(--muted);font-size:12px}.stat b{font-size:22px;color:var(--cyan)}
+.board{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:10px}
+.card{aspect-ratio:1;perspective:600px;border:0;padding:0;background:none;cursor:pointer;font:inherit}
+.card:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:14px}
+.inner{position:relative;width:100%;height:100%;transition:transform .35s;transform-style:preserve-3d}
+.card.open .inner,.card.done .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:12px;backface-visibility:hidden;border:1px solid #55ddff55}
+.front{background:linear-gradient(145deg,#0c1b32,#081224);box-shadow:inset 0 0 22px #168bff22}
+.front:after{content:"";width:30%;aspect-ratio:1;border:1px solid #8ceeff;transform:rotate(45deg);box-shadow:0 0 14px #55ddff88}
+.back-face{transform:rotateY(180deg);background:linear-gradient(135deg,#0a2845,#10152f);font-size:clamp(26px,8vw,48px)}
+.cols6 .back-face{font-size:clamp(20px,6vw,36px)}
+.card.done .back-face{border-color:#55ddff;box-shadow:0 0 22px #55ddff55}
+.btn{margin-top:20px;padding:13px 22px;border:1px solid #8ceaff;border-radius:9px;background:linear-gradient(110deg,#55ddff,#a3efff);color:#041020;font-size:14px;font-weight:900;cursor:pointer}
+.btn:hover{box-shadow:0 0 26px #55ddff60}
+.msg{margin-top:16px;padding:14px;border:1px solid #55ddff55;border-radius:10px;background:#0b1830;color:#c9f6ff}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){.inner{transition:none}}
+</style>
+</head>
+<body>
+<header class="top"><a class="logo" href="index.html">NEO<span> GAMES</span></a><a class="back" href="index.html">Tagasi mängude juurde</a></header>
+<main>
+<h1>Neon Memory</h1>
+<p class="sub">Vali raskusaste ja leia kõik paarid võimalikult väheste käikudega.</p>
+<div class="levels" id="levels" role="group" aria-label="Raskusaste"></div>
+<div class="stats">
+<div class="stat"><small>Käigud</small><b id="moves">0</b></div>
+<div class="stat"><small>Paarid</small><b id="pairs">0</b></div>
+<div class="stat"><small>Aeg</small><b id="time">0 s</b></div>
+<div class="stat"><small>Rekord</small><b id="best">–</b></div>
+</div>
+<div class="board" id="board"></div>
+<div class="msg" id="msg" hidden></div>
+<button class="btn" id="restart" type="button">Uus mäng</button>
+</main>
+<script>
+const symbols=["🎱","🐍","🧱","🏓","🏃","🏒","🏎️","⭐","🧠","🚀","💎","🔥","⚡","🎯","👾","🌙","🎮","🛸"];
+const levels=[
+  {id:"easy",name:"Lihtne",pairs:6,cols:4},
+  {id:"medium",name:"Keskmine",pairs:8,cols:4},
+  {id:"hard",name:"Raske",pairs:12,cols:6},
+  {id:"extreme",name:"Ekstreemne",pairs:18,cols:6}
+];
+const board=document.getElementById("board"),levelsEl=document.getElementById("levels"),movesEl=document.getElementById("moves"),pairsEl=document.getElementById("pairs"),timeEl=document.getElementById("time"),bestEl=document.getElementById("best"),msg=document.getElementById("msg");
+let level=levels[1],first=null,lock=false,moves=0,pairs=0,start=0,timer=null,bests={};
+try{bests=JSON.parse(localStorage.getItem("neoMemoryBests"))||{}}catch(e){}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function showBest(){bestEl.textContent=bests[level.id]?bests[level.id]+" käiku":"–"}
+levels.forEach(function(l){
+  const b=document.createElement("button");
+  b.type="button";b.className="level";b.dataset.id=l.id;
+  b.innerHTML=l.name+"<small>"+(l.pairs*2)+" kaarti</small>";
+  b.addEventListener("click",function(){level=l;newGame()});
+  levelsEl.appendChild(b);
+});
+function newGame(){
+  clearInterval(timer);timer=null;first=null;lock=false;moves=0;pairs=0;start=0;
+  movesEl.textContent="0";pairsEl.textContent="0 / "+level.pairs;timeEl.textContent="0 s";msg.hidden=true;board.innerHTML="";
+  board.style.setProperty("--cols",level.cols);
+  board.className="board"+(level.cols===6?" cols6":"");
+  levelsEl.querySelectorAll(".level").forEach(function(b){
+    const on=b.dataset.id===level.id;
+    b.classList.toggle("active",on);b.setAttribute("aria-pressed",on);
+  });
+  showBest();
+  const set=symbols.slice(0,level.pairs);
+  shuffle(set.concat(set)).forEach(function(s){
+    const c=document.createElement("button");
+    c.type="button";c.className="card";c.dataset.s=s;c.setAttribute("aria-label","Peidetud kaart");
+    c.innerHTML='<div class="inner"><div class="face front"></div><div class="face back-face">'+s+'</div></div>';
+    c.addEventListener("click",function(){flip(c)});
+    board.appendChild(c);
+  });
+}
+function flip(c){
+  if(lock||c.classList.contains("open")||c.classList.contains("done"))return;
+  if(!timer){start=Date.now();timer=setInterval(function(){timeEl.textContent=Math.floor((Date.now()-start)/1000)+" s"},500)}
+  c.classList.add("open");c.setAttribute("aria-label","Kaart "+c.dataset.s);
+  if(!first){first=c;return}
+  moves++;movesEl.textContent=moves;lock=true;
+  const a=first,b=c;first=null;
+  if(a.dataset.s===b.dataset.s){
+    a.classList.replace("open","done");b.classList.replace("open","done");
+    pairs++;pairsEl.textContent=pairs+" / "+level.pairs;lock=false;
+    if(pairs===level.pairs)win();
+  }else{
+    setTimeout(function(){
+      [a,b].forEach(function(x){x.classList.remove("open");x.setAttribute("aria-label","Peidetud kaart")});
+      lock=false;
+    },750);
+  }
+}
+function win(){
+  clearInterval(timer);timer=null;
+  const secs=Math.floor((Date.now()-start)/1000);
+  let text="Valmis! "+moves+" käiku, "+secs+" sekundit.";
+  if(!bests[level.id]||moves<bests[level.id]){
+    bests[level.id]=moves;text+=" Uus rekord!";showBest();
+    try{localStorage.setItem("neoMemoryBests",JSON.stringify(bests))}catch(e){}
+  }
+  msg.textContent=text;msg.hidden=false;
+}
+document.getElementById("restart").addEventListener("click",newGame);
+newGame();
+</script>
+</body>
+</html>
