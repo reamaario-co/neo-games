@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="et">
 <head>
@@ -14,94 +13,76 @@
 }
 * { box-sizing: border-box; }
 body {
-  margin: 0;
-  min-height: 100vh;
-  padding: 22px 12px 36px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  margin: 0; min-height: 100vh; padding: 22px 12px 36px;
+  display: flex; flex-direction: column; align-items: center;
   color: #f1f5ff;
-  background:
-    radial-gradient(ellipse at 50% 0%, #172b49 0%, var(--bg) 65%);
+  background: radial-gradient(ellipse at 50% 0%, #172b49 0%, var(--bg) 65%);
   font-family: Arial, sans-serif;
 }
-h1 {
-  margin: 5px 0;
-  color: var(--cyan);
-  letter-spacing: 4px;
-  text-shadow: 0 0 12px #168dbb, 0 0 30px #168dbb;
-}
+h1 { margin: 5px 0; color: var(--cyan); letter-spacing: 4px;
+  text-shadow: 0 0 12px #168dbb, 0 0 30px #168dbb; }
 .subtitle { color: #aab8d0; text-align: center; }
-.panel {
-  width: min(900px, 96vw);
-  padding: 15px;
-  margin: 12px 0;
-  border: 1px solid #2b4668;
-  border-radius: 13px;
-  background: #0e1728dd;
-}
-.settings {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
+.panel { width: min(900px, 96vw); padding: 15px; margin: 12px 0;
+  border: 1px solid #2b4668; border-radius: 13px; background: #0e1728dd; }
+.settings { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
 label { color: #c5d5eb; font-size: 14px; }
 select, button, .link {
-  border: 1px solid #365777;
-  border-radius: 8px;
-  padding: 11px 14px;
-  background: var(--panel);
-  color: white;
-  font-weight: bold;
-  font-size: 14px;
+  border: 1px solid #365777; border-radius: 8px; padding: 11px 14px;
+  background: var(--panel); color: white; font-weight: bold; font-size: 14px;
 }
 button, .link, select { cursor: pointer; }
-button:hover, .link:hover {
-  border-color: var(--cyan);
-  box-shadow: 0 0 14px #55ddff35;
-}
-button.primary {
-  background: var(--cyan);
-  color: #07111f;
-  border-color: var(--cyan);
-}
-button:focus-visible, select:focus-visible, a:focus-visible {
-  outline: 2px solid white;
-  outline-offset: 3px;
-}
-#score {
-  color: var(--cyan);
-  font-size: clamp(20px, 4vw, 29px);
-  text-align: center;
-  font-weight: bold;
-  text-shadow: 0 0 14px #168dbb;
-}
+button:hover, .link:hover { border-color: var(--cyan); box-shadow: 0 0 14px #55ddff35; }
+button.primary { background: var(--cyan); color: #07111f; border-color: var(--cyan); }
+button:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+#score { color: var(--cyan); font-size: clamp(20px, 4vw, 29px); text-align: center;
+  font-weight: bold; text-shadow: 0 0 14px #168dbb; }
 #status { min-height: 24px; text-align: center; color: #b7cbe3; }
-canvas {
-  display: block;
-  width: min(900px, 96vw);
-  height: auto;
-  border: 1px solid #376a91;
-  border-radius: 12px;
-  background: #050914;
-  box-shadow: 0 0 15px #0c87ad55, 0 0 40px #9d38ff20;
-  touch-action: none;
-}
-.actions {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
+canvas { display: block; width: min(900px, 96vw); height: auto; border: 1px solid #376a91;
+  border-radius: 12px; background: #050914; box-shadow: 0 0 15px #0c87ad55, 0 0 40px #9d38ff20; touch-action: none; }
+.actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .link { text-decoration: none; }
 .help { max-width: 850px; text-align: center; line-height: 1.7; color: #9eacc5; font-size: 13px; }
+.style-note { color:#aebfdb; font-size:13px; text-align:center; margin: 6px 0 0; }
+/* Main menu */
+.menu-screen { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; overflow-y: auto;
+  background: radial-gradient(ellipse at 50% 30%, #172d54ee 0%, #050814f7 68%); backdrop-filter: blur(8px); }
+.menu-card { width: min(760px, 100%); padding: clamp(22px, 5vw, 46px); text-align: center; border: 1px solid #3c6792; border-radius: 24px;
+  background: linear-gradient(145deg, #101c32f5, #080e1df7); box-shadow: 0 0 25px #1acbff22, 0 0 90px #b22dff17; }
+.menu-kicker { color: #ff65e8; font-size: 12px; font-weight: 800; letter-spacing: 5px; text-transform: uppercase; }
+.menu-logo { margin: 10px 0 0; font-size: clamp(42px, 9vw, 76px); line-height: 1; letter-spacing: clamp(3px, 1vw, 10px); color: #eafaff; text-shadow: 0 0 8px #55ddff, 0 0 26px #159bff, 0 0 55px #a23dff; }
+.menu-subtitle { color: #a9bdd9; margin: 16px 0 24px; }
+.menu-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 20px 0; }
+.menu-buttons button { min-width: 180px; padding: 14px 20px; }
+.menu-primary { color: #06111e; background: linear-gradient(100deg, #55ddff, #9cf7ff); border-color: #8df0ff; box-shadow: 0 0 24px #39d9ff35; }
+.menu-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 24px; }
+.menu-option { padding: 13px 10px; border: 1px solid #263e60; border-radius: 12px; background: #0a1427; color: #d7eaff; font-size: 13px; }
+.menu-option strong { display: block; color: #63e5ff; font-size: 20px; margin-bottom: 5px; }
+.menu-help { display: none; margin: 16px auto 0; max-width: 540px; color: #c2d2e8; font-size: 14px; line-height: 1.8; }
+.menu-help.open { display: block; }
+.menu-foot { color: #6f87a8; font-size: 11px; letter-spacing: 2px; margin-top: 24px; }
+@media (max-width: 560px) { .menu-options { grid-template-columns: 1fr; } .menu-option { display: flex; align-items: center; gap: 12px; text-align: left; } .menu-option strong { margin: 0; min-width: 34px; } }
 </style>
 </head>
 <body>
-
+<section class="menu-screen" id="menuScreen" aria-label="Neon Pongi peamenüü">
+  <div class="menu-card">
+    <div class="menu-kicker">NEO GAMES esitleb</div>
+    <div class="menu-logo">NEON PONG</div>
+    <p class="menu-subtitle">Klassikaline arkaadmäng. Uus neoonenergia.</p>
+    <div class="menu-buttons">
+      <button class="menu-primary" id="menuPlay" type="button">▶ MÄNGI</button>
+      <button id="menuTwoPlayer" type="button">⚔ 2 MÄNGIJAT</button>
+      <button id="menuInstructions" type="button">ⓘ JUHISED</button>
+    </div>
+    <div class="menu-options">
+      <div class="menu-option"><strong>01</strong><span>4 arvuti mängustiili ja valitav raskus</span></div>
+      <div class="menu-option"><strong>02</strong><span>Eriboonused, kiirenev pall ja sädelevad efektid</span></div>
+      <div class="menu-option"><strong>03</strong><span>4 neoonareeni ja kahe mängija režiim</span></div>
+    </div>
+    <div class="menu-help" id="menuHelp">Ühe mängija režiim: liiguta reketit klahvide W/S või ↑/↓ abil; saad kasutada ka hiirt või puuteekraani. Kahe mängija režiimis juhib vasak mängija reketit W/S ja parem mängija nooltega. Esimene 5 punktini jõudnud mängija võidab. Tühikuklahv peatab või jätkab mängu.</div>
+    <div class="menu-foot">READY PLAYER ONE · ARCADE MODE</div>
+  </div>
+</section>
 <h1>NEON PONG</h1>
 <p class="subtitle">Arkaadklassika uues neoonkuues</p>
 
@@ -113,30 +94,53 @@ canvas {
       <option value="normal" selected>Keskmine</option>
       <option value="hard">Raske</option>
     </select>
+    <label for="mode">Mängurežiim:</label>
+    <select id="mode">
+      <option value="cpu" selected>Üks mängija vs arvuti</option>
+      <option value="two">Kahe mängija režiim</option>
+    </select>
+    <label for="cpuStyle" id="cpuStyleLabel">Arvuti mängustiil:</label>
+    <select id="cpuStyle">
+      <option value="balanced" selected>⚖️ Tasakaalustatud</option>
+      <option value="aggressive">🔥 Ründav</option>
+      <option value="defensive">🛡️ Kaitsev</option>
+      <option value="tricky">🎭 Kaval</option>
+    </select>
+    <label for="arena">Areen:</label>
+    <select id="arena">
+      <option value="cyber" selected>🌌 Küberruum</option>
+      <option value="grid">🟦 Neoonvõrk</option>
+      <option value="sunset">🌇 Päikeseloojang</option>
+      <option value="matrix">🟩 Maatriks</option>
+    </select>
     <button id="sound" type="button">🔊 Heli sees</button>
   </div>
+  <p class="style-note" id="styleNote">Tasakaalustatud: arvuti ühendab täpse ennustamise ja mõõduka riskimise.</p>
+  <p class="style-note">Boonused: 🟦 suurem reket · ⚡ kiirem pall · ❄ aeglasem vastane. Pall kiireneb iga löögiga!</p>
 </div>
 
-<div id="score">Sina 0 : 0 Arvuti</div>
-<canvas id="game" width="900" height="500"
-        aria-label="Neon Pong mänguväli"></canvas>
+<div id="score">Mängija 1 0 : 0 Arvuti</div>
+<canvas id="game" width="900" height="500" aria-label="Neon Pong mänguväli"></canvas>
 <div id="status" role="status">Vajuta „Alusta mängu“.</div>
-
 <div class="actions">
   <button class="primary" id="start" type="button">▶ Alusta mängu</button>
   <button id="pause" type="button" disabled>⏸ Paus</button>
   <button id="reset" type="button">↻ Alusta uuesti</button>
   <a class="link" href="index.html">← Avalehele</a>
 </div>
-
 <p class="help">
-  Juhtimine: W/S või ↑/↓. Hiire või puuteekraaniga saad samuti oma reketit liigutada.
-  Võitmiseks kogu 5 punkti. Arvuti juhib parempoolset reketit.
+  Ühe mängija režiim: W/S või ↑/↓, hiir või puuteekraan. Kahe mängija režiim: vasak mängija W/S, parem mängija ↑/↓.
+  Võiduks kogu 5 punkti. Püüa helendavaid boonuseid ja katseta nelja areeni!
 </p>
 
 <script>
 "use strict";
 
+const menuScreen = document.getElementById("menuScreen");
+const menuPlayBtn = document.getElementById("menuPlay");
+const menuTwoPlayerBtn = document.getElementById("menuTwoPlayer");
+const menuInstructionsBtn = document.getElementById("menuInstructions");
+const menuHelp = document.getElementById("menuHelp");
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
@@ -145,15 +149,32 @@ const startBtn = document.getElementById("start");
 const pauseBtn = document.getElementById("pause");
 const resetBtn = document.getElementById("reset");
 const difficultyEl = document.getElementById("difficulty");
+const cpuStyleEl = document.getElementById("cpuStyle");
+const styleNoteEl = document.getElementById("styleNote");
 const soundBtn = document.getElementById("sound");
+const modeEl = document.getElementById("mode");
+const arenaEl = document.getElementById("arena");
+const cpuStyleLabel = document.getElementById("cpuStyleLabel");
 
 const W = canvas.width;
 const H = canvas.height;
 const WIN_SCORE = 5;
 
-const player = { x: 28, y: 205, w: 13, h: 90 };
-const cpu = { x: W - 41, y: 205, w: 13, h: 90 };
+const player = { x: 28, y: 205, w: 13, h: 90, baseH: 90 };
+const cpu = { x: W - 41, y: 205, w: 13, h: 90, baseH: 90 };
 const ball = { x: W / 2, y: H / 2, r: 9, vx: 5, vy: 2 };
+let rallyHits = 0;
+let pickup = null;
+let pickupTimer = 0;
+let effects = { playerBig: 0, cpuBig: 0, playerSlow: 0, cpuSlow: 0, speedBoost: 0 };
+let banner = "";
+let bannerTime = 0;
+const arenaColors = {
+  cyber: { a: "#101c32", b: "#030610", line: "#2a4260", glow: "#55ddff", accent: "#ff4fe1" },
+  grid: { a: "#082b3b", b: "#020913", line: "#167f9d", glow: "#37f0ff", accent: "#7d6bff" },
+  sunset: { a: "#421b48", b: "#100719", line: "#79375e", glow: "#ffb45e", accent: "#ff4f9a" },
+  matrix: { a: "#082818", b: "#010806", line: "#17633b", glow: "#62ff9a", accent: "#d7ff6b" }
+};
 
 let playerScore = 0;
 let cpuScore = 0;
@@ -163,18 +184,49 @@ let audio = null;
 let lastTime = 0;
 let animationId = 0;
 let particles = [];
+let cpuMood = "steady";
+let lastStyleDecision = 0;
+let aiAimOffset = 0;
+let aiMistakeUntil = 0;
+let nextAiMistake = 0;
 const keys = Object.create(null);
 
 const levels = {
-  easy:   { cpu: 3.0, ball: 4.6, reaction: 0.70 },
-  normal: { cpu: 4.5, ball: 5.5, reaction: 0.88 },
-  hard:   { cpu: 6.3, ball: 6.3, reaction: 1.00 }
+  easy:   { cpu: 3.2, ball: 4.6, reaction: 0.72, prediction: 0.56, error: 78 },
+  normal: { cpu: 4.8, ball: 5.5, reaction: 0.88, prediction: 0.83, error: 38 },
+  hard:   { cpu: 6.5, ball: 6.3, reaction: 1.00, prediction: 0.98, error: 15 }
 };
 
-function settings() {
-  return levels[difficultyEl.value] || levels.normal;
-}
+const styles = {
+  balanced: {
+    name: "Tasakaalustatud",
+    note: "Ühendab täpse ennustamise ja mõõduka riskimise.",
+    prediction: 1.0, speed: 1.0, error: 1.0, offset: 0.0
+  },
+  aggressive: {
+    name: "Ründav",
+    note: "Liigub kiiremini palli suunas ja proovib tugevaid vastulööke.",
+    prediction: 0.88, speed: 1.13, error: 1.18, offset: 0.0
+  },
+  defensive: {
+    name: "Kaitsev",
+    note: "Hoiab reketit keskele lähemal ja püüab riske vähendada.",
+    prediction: 0.82, speed: 0.92, error: 0.78, offset: 0.0
+  },
+  tricky: {
+    name: "Kaval",
+    note: "Muudab veidi sihtkohta ja ajastust, et olla raskemini loetav.",
+    prediction: 0.92, speed: 1.02, error: 1.28, offset: 0.0
+  }
+};
 
+function settings() { return levels[difficultyEl.value] || levels.normal; }
+function styleSettings() { return styles[cpuStyleEl.value] || styles.balanced; }
+
+function updateStyleNote() {
+  const s = styleSettings();
+  styleNoteEl.textContent = `${s.name}: ${s.note}`;
+}
 function ensureAudio() {
   if (!audio) {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -182,73 +234,65 @@ function ensureAudio() {
   }
   if (audio && audio.state === "suspended") audio.resume();
 }
-
 function beep(freq, duration = 0.07, type = "sine", volume = 0.035) {
   if (!soundOn) return;
   ensureAudio();
   if (!audio) return;
-
   const osc = audio.createOscillator();
   const gain = audio.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, audio.currentTime);
   gain.gain.setValueAtTime(volume, audio.currentTime);
-  gain.gain.exponentialRampToValueAtTime(
-    0.001, audio.currentTime + duration
-  );
-  osc.connect(gain);
-  gain.connect(audio.destination);
-  osc.start();
-  osc.stop(audio.currentTime + duration);
+  gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + duration);
+  osc.connect(gain); gain.connect(audio.destination);
+  osc.start(); osc.stop(audio.currentTime + duration);
 }
-
 function updateScore() {
-  scoreEl.textContent = `Sina ${playerScore} : ${cpuScore} Arvuti`;
+  scoreEl.textContent = modeEl.value === "two"
+    ? `Mängija 1 ${playerScore} : ${cpuScore} Mängija 2`
+    : `Sina ${playerScore} : ${cpuScore} Arvuti`;
 }
-
 function clampPaddles() {
   player.y = Math.max(0, Math.min(H - player.h, player.y));
   cpu.y = Math.max(0, Math.min(H - cpu.h, cpu.y));
 }
-
 function resetBall(direction) {
-  ball.x = W / 2;
-  ball.y = H / 2;
+  ball.x = W / 2; ball.y = H / 2;
   const speed = settings().ball;
   ball.vx = speed * direction;
   ball.vy = (Math.random() * 2 - 1) * speed * 0.55;
+  rallyHits = 0; pickup = null; pickupTimer = 2.5;
+  effects = { playerBig: 0, cpuBig: 0, playerSlow: 0, cpuSlow: 0, speedBoost: 0 };
+  player.h = player.baseH; cpu.h = cpu.baseH;
+  cpuMood = "steady";
 }
-
 function resetGame() {
   cancelAnimationFrame(animationId);
-  playerScore = 0;
-  cpuScore = 0;
-  particles = [];
+  playerScore = 0; cpuScore = 0; particles = []; pickup = null;
+  player.h = player.baseH; cpu.h = cpu.baseH;
   player.y = H / 2 - player.h / 2;
   cpu.y = H / 2 - cpu.h / 2;
   resetBall(Math.random() < 0.5 ? -1 : 1);
-  state = "ready";
-  lastTime = 0;
+  state = "ready"; lastTime = 0;
   updateScore();
   statusEl.textContent = "Vajuta „Alusta mängu“.";
   startBtn.textContent = "▶ Alusta mängu";
-  pauseBtn.disabled = true;
+  pauseBtn.disabled = true; pauseBtn.textContent = "⏸ Paus";
   draw();
 }
-
 function startGame() {
   if (state === "over" || state === "playing") return;
   ensureAudio();
   state = "playing";
-  statusEl.textContent = "Mäng käib!";
+  statusEl.textContent = modeEl.value === "two"
+    ? "Mäng käib! Mängija 1: W/S · Mängija 2: ↑/↓."
+    : `Mäng käib! Arvuti stiil: ${styleSettings().name}.`;
   startBtn.textContent = "▶ Mäng käib";
-  pauseBtn.disabled = false;
-  pauseBtn.textContent = "⏸ Paus";
+  pauseBtn.disabled = false; pauseBtn.textContent = "⏸ Paus";
   lastTime = 0;
   cancelAnimationFrame(animationId);
   animationId = requestAnimationFrame(loop);
 }
-
 function togglePause() {
   if (state === "playing") {
     state = "paused";
@@ -256,97 +300,168 @@ function togglePause() {
     pauseBtn.textContent = "▶ Jätka";
     startBtn.textContent = "▶ Jätka mängu";
     draw();
-  } else if (state === "paused") {
-    startGame();
-  }
+  } else if (state === "paused") startGame();
 }
-
 function burst(x, y, color, count = 14) {
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
     const speed = 1 + Math.random() * 4;
-    particles.push({
-      x, y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 1,
-      color,
-      size: 2 + Math.random() * 3
-    });
+    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      life: 1, color, size: 2 + Math.random() * 3 });
   }
 }
-
 function point(playerWon) {
   if (playerWon) {
-    playerScore++;
-    burst(W - 110, H / 2, "#55ddff", 28);
-    beep(660, 0.15, "triangle");
+    playerScore++; burst(W - 110, H / 2, "#55ddff", 28); beep(660, 0.15, "triangle");
   } else {
-    cpuScore++;
-    burst(110, H / 2, "#ff4fe1", 28);
-    beep(180, 0.20, "sawtooth", 0.025);
+    cpuScore++; burst(110, H / 2, "#ff4fe1", 28); beep(180, 0.20, "sawtooth", 0.025);
   }
   updateScore();
-
   if (playerScore >= WIN_SCORE || cpuScore >= WIN_SCORE) {
     state = "over";
     statusEl.textContent = playerScore >= WIN_SCORE
-      ? "🏆 Sina võitsid! Vajuta „Alusta uuesti“."
-      : "Arvuti võitis. Proovi uuesti!";
-    startBtn.textContent = "▶ Alusta uuesti";
-    pauseBtn.disabled = true;
-    draw();
+      ? (modeEl.value === "two" ? "🏆 Mängija 1 võitis! Vajuta „Alusta uuesti“." : "🏆 Sina võitsid! Vajuta „Alusta uuesti“.")
+      : (modeEl.value === "two" ? "🏆 Mängija 2 võitis! Proovi uuesti!" : "Arvuti võitis. Proovi uuesti!");
+    startBtn.textContent = "▶ Alusta uuesti"; pauseBtn.disabled = true; draw();
     return;
   }
-
   resetBall(playerWon ? -1 : 1);
 }
-
 function movePlayer(dt) {
-  const speed = 420;
-  if (keys["w"] || keys["arrowup"]) player.y -= speed * dt;
-  if (keys["s"] || keys["arrowdown"]) player.y += speed * dt;
-  clampPaddles();
-}
-
-function update(dt) {
-  movePlayer(dt);
-
-  const cfg = settings();
-  const target = ball.y - cpu.h / 2;
-  const difference = target - cpu.y;
-  const maxMove = cfg.cpu * 60 * dt;
-
-  if (Math.abs(difference) > 3) {
-    cpu.y += Math.sign(difference) *
-      Math.min(Math.abs(difference), maxMove) * cfg.reaction;
+  const speed = effects.playerSlow > 0 ? 270 : 420;
+  if (keys["w"]) player.y -= speed * dt;
+  if (keys["s"]) player.y += speed * dt;
+  if (modeEl.value === "two") {
+    if (keys["arrowup"]) cpu.y -= speed * dt;
+    if (keys["arrowdown"]) cpu.y += speed * dt;
   }
   clampPaddles();
+}
+function predictBallY() {
+  if (ball.vx <= 0) return ball.y;
+  const distance = Math.max(0, cpu.x - ball.r - ball.x);
+  const time = distance / Math.max(1, ball.vx * 60);
+  const minY = ball.r, maxY = H - ball.r, range = maxY - minY;
+  let relativeY = ball.y + ball.vy * 60 * time - minY;
+  relativeY = ((relativeY % (2 * range)) + 2 * range) % (2 * range);
+  if (relativeY > range) relativeY = 2 * range - relativeY;
+  return minY + relativeY;
+}
+function updateCpu(dt) {
+  if (modeEl.value === "two") return;
+  const cfg = settings();
+  const style = styleSettings();
+  const now = performance.now();
 
+  // Arvuti ei näe palli tulevikku täiuslikult: sihtmärk ja reaktsioon muutuvad.
+  // Isegi raskel tasemel teeb arvuti vahel väikseid valearvestusi.
+  if (now - lastStyleDecision > 520) {
+    lastStyleDecision = now;
+    cpuMood = Math.random() < 0.5 ? "steady" : "feint";
+    const levelError = difficultyEl.value === "easy" ? 48 : difficultyEl.value === "hard" ? 34 : 41;
+    const styleError = cpuStyleEl.value === "defensive" ? 0.72 : cpuStyleEl.value === "tricky" ? 1.3 : 1;
+    aiAimOffset = (Math.random() * 2 - 1) * levelError * styleError;
+  }
+  if (now > nextAiMistake) {
+    aiMistakeUntil = now + 260 + Math.random() * 360;
+    nextAiMistake = now + 2400 + Math.random() * 3600;
+  }
+
+  let targetY;
+  if (ball.vx > 0) {
+    const predicted = predictBallY();
+    const prediction = Math.min(1, cfg.prediction * style.prediction);
+    targetY = ball.y + (predicted - ball.y) * prediction;
+    targetY += aiAimOffset;
+
+    // Kaitsev stiil hoiab palli poole liikudes sihtmärgi pisut keskele.
+    if (cpuStyleEl.value === "defensive") {
+      targetY = targetY * 0.84 + H / 2 * 0.16;
+    }
+    // Kaval stiil teeb aeg-ajalt väikese näilise suunamuutuse.
+    if (cpuStyleEl.value === "tricky" && cpuMood === "feint") {
+      targetY += Math.sin(now / 180) * 24;
+    }
+  } else {
+    // Kui pall liigub mängija poole, liigub arvuti tagasi kaitsvasse lähteasendisse.
+    targetY = H / 2;
+    if (cpuStyleEl.value === "aggressive") targetY = H / 2 + Math.sin(now / 300) * 24;
+  }
+
+  const error = cfg.error * style.error;
+  const wobble = Math.sin(now / (cpuStyleEl.value === "tricky" ? 190 : 370)) * error * 0.35;
+  // Lühikese eksimuse ajal liigub arvuti vale koha poole või reageerib hiljem.
+  const duringMistake = now < aiMistakeUntil;
+  const target = (duringMistake ? H / 2 : targetY) - cpu.h / 2 + wobble;
+  const difference = target - cpu.y;
+  const slowFactor = effects.cpuSlow > 0 ? 0.58 : 1;
+  // Piirame arvuti liikumiskiirust, et mängija saaks ka raskel tasemel võita.
+  const difficultyCap = difficultyEl.value === "hard" ? 0.76 : difficultyEl.value === "normal" ? 0.88 : 1.0;
+  const maxMove = cfg.cpu * style.speed * slowFactor * difficultyCap * 60 * dt;
+
+  if (Math.abs(difference) > 3) {
+    cpu.y += Math.sign(difference) * Math.min(Math.abs(difference), maxMove) * cfg.reaction * (duringMistake ? 0.48 : 0.86);
+  }
+  clampPaddles();
+}
+function spawnPickup() {
+  const types = ["big", "speed", "slow"];
+  const type = types[Math.floor(Math.random() * types.length)];
+  pickup = { x: W * (0.32 + Math.random() * 0.36), y: 55 + Math.random() * (H - 110), r: 16, type, pulse: 0 };
+}
+function applyPickup(type, side) {
+  const isPlayer = side === "player";
+  if (type === "big") {
+    const paddle = isPlayer ? player : cpu;
+    paddle.h = 140;
+    effects[isPlayer ? "playerBig" : "cpuBig"] = 7;
+    burst(paddle.x + paddle.w / 2, paddle.y + paddle.h / 2, "#62ff9a", 22);
+    banner = isPlayer ? "SUUR REKET!" : "VASTASE REKET SUURENES!";
+  } else if (type === "speed") {
+    const sign = Math.sign(ball.vx) || 1;
+    ball.vx = sign * Math.min(Math.abs(ball.vx) + 1.8, 11.5);
+    ball.vy *= 1.12;
+    effects.speedBoost = 3;
+    burst(ball.x, ball.y, "#ffd166", 22);
+    banner = "⚡ KIIRUSEBOONUS!";
+  } else {
+    const other = isPlayer ? "cpuSlow" : "playerSlow";
+    effects[other] = 6;
+    burst(ball.x, ball.y, "#7dd3fc", 22);
+    banner = isPlayer ? "VASTANE AEG-LUSTUS!" : "SINU KIIRUS VÄHENES!";
+  }
+  bannerTime = 1.4; beep(780, 0.16, "sine", 0.05);
+  statusEl.textContent = banner;
+}
+function update(dt) {
+  movePlayer(dt);
+  updateCpu(dt);
+  for (const key of Object.keys(effects)) effects[key] = Math.max(0, effects[key] - dt);
+  if (effects.playerBig <= 0) player.h = player.baseH;
+  if (effects.cpuBig <= 0) cpu.h = cpu.baseH;
+  bannerTime = Math.max(0, bannerTime - dt);
+  pickupTimer -= dt;
+  if (!pickup && pickupTimer <= 0 && Math.random() < 0.018) { spawnPickup(); pickupTimer = 4 + Math.random() * 3; }
+
+  // Palli kiirus kasvab löökide ja põrgete käigus, kuid jääb mängitavaks.
   ball.x += ball.vx * 60 * dt;
   ball.y += ball.vy * 60 * dt;
 
   if (ball.y - ball.r <= 0) {
-    ball.y = ball.r;
-    ball.vy = Math.abs(ball.vy);
-    beep(420);
-    burst(ball.x, ball.y, "#55ddff", 5);
+    ball.y = ball.r; ball.vy = Math.abs(ball.vy);
+    beep(420); burst(ball.x, ball.y, "#55ddff", 5);
   } else if (ball.y + ball.r >= H) {
-    ball.y = H - ball.r;
-    ball.vy = -Math.abs(ball.vy);
-    beep(420);
-    burst(ball.x, ball.y, "#55ddff", 5);
+    ball.y = H - ball.r; ball.vy = -Math.abs(ball.vy);
+    beep(420); burst(ball.x, ball.y, "#55ddff", 5);
   }
 
-  const hitPlayer =
-    ball.vx < 0 &&
+  const hitPlayer = ball.vx < 0 &&
     ball.x - ball.r <= player.x + player.w &&
     ball.x + ball.r >= player.x &&
     ball.y + ball.r >= player.y &&
     ball.y - ball.r <= player.y + player.h;
 
-  const hitCpu =
-    ball.vx > 0 &&
+  const hitCpu = ball.vx > 0 &&
     ball.x + ball.r >= cpu.x &&
     ball.x - ball.r <= cpu.x + cpu.w &&
     ball.y + ball.r >= cpu.y &&
@@ -354,170 +469,181 @@ function update(dt) {
 
   if (hitPlayer) {
     ball.x = player.x + player.w + ball.r;
-    ball.vx = Math.min(Math.abs(ball.vx) + 0.28, 10) ;
+    rallyHits++;
+    ball.vx = Math.min(Math.abs(ball.vx) + 0.32, 11.5);
+    ball.vy *= 1.025;
     ball.vy += (ball.y - (player.y + player.h / 2)) / 18;
-    burst(ball.x, ball.y, "#55ddff", 13);
-    beep(520, 0.08, "triangle");
+    burst(ball.x, ball.y, "#55ddff", 13); beep(520, 0.08, "triangle");
   }
-
   if (hitCpu) {
     ball.x = cpu.x - ball.r;
-    ball.vx = -Math.min(Math.abs(ball.vx) + 0.18, 10);
+    rallyHits++;
+    ball.vx = -Math.min(Math.abs(ball.vx) + 0.28, 11.5);
+    ball.vy *= 1.025;
     ball.vy += (ball.y - (cpu.y + cpu.h / 2)) / 24;
-    burst(ball.x, ball.y, "#ff4fe1", 13);
-    beep(360, 0.08, "triangle");
+    burst(ball.x, ball.y, "#ff4fe1", 13); beep(360, 0.08, "triangle");
   }
 
+  ball.vy = Math.max(-10, Math.min(10, ball.vy));
+  if (pickup && Math.hypot(ball.x - pickup.x, ball.y - pickup.y) < ball.r + pickup.r) {
+    const side = ball.vx < 0 ? "player" : "cpu";
+    applyPickup(pickup.type, side); pickup = null; pickupTimer = 4 + Math.random() * 3;
+  }
   if (ball.x + ball.r < 0) point(false);
   else if (ball.x - ball.r > W) point(true);
 
+  if (pickup) {
+    const colors = { big: "#62ff9a", speed: "#ffd166", slow: "#7dd3fc" };
+    const symbols = { big: "↕", speed: "⚡", slow: "❄" };
+    const color = colors[pickup.type];
+    pickup.pulse += 0.08;
+    ctx.save(); ctx.shadowColor = color; ctx.shadowBlur = 22;
+    ctx.strokeStyle = color; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(pickup.x, pickup.y, pickup.r + Math.sin(pickup.pulse) * 3, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = color; ctx.font = "bold 20px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(symbols[pickup.type], pickup.x, pickup.y); ctx.restore();
+  }
+
   for (const p of particles) {
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life -= 1.8 * dt;
+    p.x += p.vx; p.y += p.vy; p.life -= 1.8 * dt;
   }
   particles = particles.filter(p => p.life > 0);
 }
-
 function drawGlowRect(x, y, w, h, color) {
-  ctx.save();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 22;
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, w, h);
-  ctx.restore();
+  ctx.save(); ctx.shadowColor = color; ctx.shadowBlur = 22;
+  ctx.fillStyle = color; ctx.fillRect(x, y, w, h); ctx.restore();
 }
-
 function draw() {
   ctx.clearRect(0, 0, W, H);
-
+  const theme = arenaColors[arenaEl.value] || arenaColors.cyber;
   const bg = ctx.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, 600);
-  bg.addColorStop(0, "#101c32");
-  bg.addColorStop(1, "#030610");
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
+  bg.addColorStop(0, theme.a); bg.addColorStop(1, theme.b);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  if (arenaEl.value === "grid" || arenaEl.value === "matrix") {
+    ctx.save(); ctx.strokeStyle = theme.line + "55"; ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 36) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 36) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.restore();
+  }
+  if (arenaEl.value === "sunset") {
+    ctx.save(); ctx.globalAlpha = 0.24; ctx.strokeStyle = theme.glow; ctx.lineWidth = 2;
+    for (let y = H * 0.55; y < H; y += 22) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.restore();
+  }
+  ctx.save(); ctx.strokeStyle = theme.line; ctx.setLineDash([10, 13]); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke(); ctx.restore();
 
-  ctx.save();
-  ctx.strokeStyle = "#2a4260";
-  ctx.setLineDash([10, 13]);
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(W / 2, 0);
-  ctx.lineTo(W / 2, H);
-  ctx.stroke();
-  ctx.restore();
+  drawGlowRect(player.x, player.y, player.w, player.h, theme.glow);
+  drawGlowRect(cpu.x, cpu.y, cpu.w, cpu.h, theme.accent);
 
-  drawGlowRect(player.x, player.y, player.w, player.h, "#55ddff");
-  drawGlowRect(cpu.x, cpu.y, cpu.w, cpu.h, "#ff4fe1");
+  ctx.save(); ctx.shadowColor = theme.glow; ctx.shadowBlur = 28;
+  ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+  ctx.fill(); ctx.restore();
 
-  ctx.save();
-  ctx.shadowColor = "#55ddff";
-  ctx.shadowBlur = 28;
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  if (pickup) {
+    const colors = { big: "#62ff9a", speed: "#ffd166", slow: "#7dd3fc" };
+    const symbols = { big: "↕", speed: "⚡", slow: "❄" };
+    const color = colors[pickup.type];
+    pickup.pulse += 0.08;
+    ctx.save(); ctx.shadowColor = color; ctx.shadowBlur = 22;
+    ctx.strokeStyle = color; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(pickup.x, pickup.y, pickup.r + Math.sin(pickup.pulse) * 3, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = color; ctx.font = "bold 20px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(symbols[pickup.type], pickup.x, pickup.y); ctx.restore();
+  }
 
   for (const p of particles) {
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, p.life);
-    ctx.fillStyle = p.color;
-    ctx.shadowColor = p.color;
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    ctx.save(); ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color; ctx.shadowBlur = 12; ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   }
 
+  if (bannerTime > 0) {
+    ctx.save(); ctx.globalAlpha = Math.min(1, bannerTime * 1.5); ctx.textAlign = "center";
+    ctx.font = "bold 22px Arial"; ctx.fillStyle = theme.glow; ctx.shadowColor = theme.glow; ctx.shadowBlur = 18;
+    ctx.fillText(banner, W / 2, 42); ctx.restore();
+  }
   if (state !== "playing") {
-    ctx.save();
-    ctx.textAlign = "center";
-    ctx.shadowBlur = 18;
+    ctx.save(); ctx.textAlign = "center"; ctx.shadowBlur = 18;
     ctx.shadowColor = state === "over" ? "#ff4fe1" : "#55ddff";
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 27px Arial";
-
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 27px Arial";
     let message = "VALMIS MÄNGIMA?";
     if (state === "paused") message = "PAUS";
-    if (state === "over") {
-      message = playerScore >= WIN_SCORE ? "SA VÕITSID!" : "ARVUTI VÕITIS!";
-    }
-
-    ctx.fillText(message, W / 2, H / 2);
-    ctx.restore();
+    if (state === "over") message = playerScore >= WIN_SCORE
+      ? (modeEl.value === "two" ? "MÄNGIJA 1 VÕITIS!" : "SA VÕITSID!")
+      : (modeEl.value === "two" ? "MÄNGIJA 2 VÕITIS!" : "ARVUTI VÕITIS!");
+    ctx.fillText(message, W / 2, H / 2); ctx.restore();
   }
 }
-
 function loop(timestamp) {
   if (state !== "playing") return;
-
-  const dt = lastTime
-    ? Math.min((timestamp - lastTime) / 1000, 0.033)
-    : 0.016;
+  const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, 0.033) : 0.016;
   lastTime = timestamp;
-
-  update(dt);
-  draw();
-
-  if (state === "playing") {
-    animationId = requestAnimationFrame(loop);
-  }
+  update(dt); draw();
+  if (state === "playing") animationId = requestAnimationFrame(loop);
 }
-
 function movePlayerTo(clientY) {
   const rect = canvas.getBoundingClientRect();
   player.y = (clientY - rect.top) * H / rect.height - player.h / 2;
   clampPaddles();
   if (state !== "playing") draw();
 }
-
 canvas.addEventListener("mousemove", e => movePlayerTo(e.clientY));
 canvas.addEventListener("touchmove", e => {
-  e.preventDefault();
-  movePlayerTo(e.touches[0].clientY);
+  e.preventDefault(); movePlayerTo(e.touches[0].clientY);
 }, { passive: false });
 
 document.addEventListener("keydown", e => {
   const key = e.key.toLowerCase();
-  if (["w", "s", "arrowup", "arrowdown", " "].includes(key)) {
-    e.preventDefault();
-  }
+  if (["w", "s", "arrowup", "arrowdown", " "].includes(key)) e.preventDefault();
   keys[key] = true;
-
   if (key === " " && !e.repeat) {
     if (state === "playing") togglePause();
     else if (state === "paused" || state === "ready") startGame();
   }
 });
+document.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
 
-document.addEventListener("keyup", e => {
-  keys[e.key.toLowerCase()] = false;
+function launchFromMenu(twoPlayers) {
+  modeEl.value = twoPlayers ? "two" : "cpu";
+  modeEl.dispatchEvent(new Event("change"));
+  menuScreen.style.display = "none";
+  startBtn.click();
+}
+menuPlayBtn.addEventListener("click", () => launchFromMenu(false));
+menuTwoPlayerBtn.addEventListener("click", () => launchFromMenu(true));
+menuInstructionsBtn.addEventListener("click", () => {
+  menuHelp.classList.toggle("open");
+  menuInstructionsBtn.textContent = menuHelp.classList.contains("open") ? "✕ PEIDA JUHISED" : "ⓘ JUHISED";
 });
-
 startBtn.addEventListener("click", () => {
   if (state === "over") resetGame();
   startGame();
 });
 pauseBtn.addEventListener("click", togglePause);
 resetBtn.addEventListener("click", resetGame);
-
 soundBtn.addEventListener("click", () => {
   soundOn = !soundOn;
   soundBtn.textContent = soundOn ? "🔊 Heli sees" : "🔇 Heli väljas";
-  if (soundOn) {
-    ensureAudio();
-    beep(660);
-  }
+  if (soundOn) { ensureAudio(); beep(660); }
 });
-
 difficultyEl.addEventListener("change", () => {
-  if (state === "playing" || state === "paused") {
-    statusEl.textContent = "Raskusaste muutub järgmise palli alguses.";
-  }
+  if (state === "playing" || state === "paused") statusEl.textContent = "Raskusaste muutub kohe.";
 });
-
+cpuStyleEl.addEventListener("change", () => {
+  updateStyleNote();
+  if (state === "playing" && modeEl.value === "cpu") statusEl.textContent = `Arvuti stiil: ${styleSettings().name}.`;
+});
+modeEl.addEventListener("change", () => {
+  cpuStyleLabel.style.display = modeEl.value === "two" ? "none" : "inline";
+  cpuStyleEl.style.display = modeEl.value === "two" ? "none" : "inline-block";
+  resetGame();
+  statusEl.textContent = modeEl.value === "two"
+    ? "Kahe mängija režiim: vasak W/S, parem ↑/↓."
+    : "Ühe mängija režiim: sina vs arvuti.";
+});
+arenaEl.addEventListener("change", () => { draw(); statusEl.textContent = `Areen: ${arenaEl.options[arenaEl.selectedIndex].text}.`; });
+updateStyleNote();
 resetGame();
 </script>
 </body>
