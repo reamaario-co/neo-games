@@ -1,0 +1,636 @@
+
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bubble Shooter | NEO GAMES</title>
+<style>
+:root {
+  --bg:#07101f; --panel:#0d1a30; --cyan:#00f5ff;
+  --pink:#ff2bd6; --text:#f4f8ff;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; min-height:100vh;
+  background:radial-gradient(ellipse at top,#142b4c,var(--bg) 65%);
+  color:var(--text); font-family:Arial,sans-serif; text-align:center;
+}
+header { padding:18px; border-bottom:1px solid #00f5ff33; }
+.logo { font-size:27px; font-weight:900; letter-spacing:2px; }
+.logo span { color:var(--cyan); }
+.subtitle { color:var(--pink); font-size:12px; letter-spacing:2px; margin-top:5px; }
+main { width:min(100%,900px); margin:auto; padding:16px; }
+.stats { display:flex; gap:10px; margin-bottom:14px; }
+.stat {
+  flex:1; padding:12px 5px; background:var(--panel);
+  border:1px solid #00f5ff44; border-radius:10px;
+}
+.stat small { display:block; color:#aabbd2; font-size:12px; }
+.stat strong { display:block; color:var(--cyan); font-size:23px; margin-top:5px; }
+#game {
+  display:block; width:100%; max-width:600px; height:auto;
+  margin:auto; border:1px solid #00f5ff88; border-radius:14px;
+  background:linear-gradient(#10233d,#081426);
+  touch-action:none; box-shadow:0 0 30px #00f5ff22;
+}
+.controls {
+  display:flex; justify-content:center; flex-wrap:wrap;
+  gap:10px; margin:15px 0;
+}
+button {
+  padding:13px 22px; border:0; border-radius:9px;
+  background:var(--cyan); color:#07101f;
+  font-weight:bold; font-size:15px; cursor:pointer;
+}
+button:hover { background:white; }
+button.secondary {
+  background:#243750; color:white; border:1px solid #00f5ff55;
+}
+#message { min-height:26px; color:var(--cyan); font-weight:bold; }
+.info { color:#aabbd2; font-size:14px; line-height:1.7; }
+footer { padding:20px; color:#8194ae; font-size:12px; }
+@media (max-width:500px) {
+  main { padding:9px; }
+  .stat { padding:9px 3px; }
+  .stat strong { font-size:19px; }
+  button { padding:12px 15px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NEO <span>GAMES</span></div>
+  <div class="subtitle">BUBBLE SHOOTER</div>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat"><small>PUNKTID</small><strong id="score">0</strong></div>
+    <div class="stat"><small>TASE</small><strong id="level">1</strong></div>
+    <div class="stat"><small>PARIM</small><strong id="best">0</strong></div>
+  </div>
+
+  <canvas id="game" width="600" height="760"></canvas>
+
+  <div class="controls">
+    <button id="pause">PAUS</button>
+    <button id="sound" class="secondary">HELI: SEES</button>
+    <button id="restart" class="secondary">UUS MÄNG</button>
+  </div>
+
+  <div id="message">Sihtimiseks liiguta hiirt ja tulista klikiga!</div>
+  <p class="info">
+    🎯 Sihti hiire või sõrmega ja tulista klikiga.<br>
+    🫧 Ühenda vähemalt 3 sama värvi mulli.<br>
+    ⬇️ Iga 3 ebaõnnestunud lasu järel langevad mullid allapoole.<br>
+    ⚠️ Ära lase mullidel jõuda alumise ohutuspiirini!
+  </p>
+</main>
+
+<footer>NEO GAMES · Sinu mängude maailm</footer>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const W = canvas.width;
+const H = canvas.height;
+
+const COLORS = [
+  "#00e5ff", "#ff2bd6", "#ffe04b",
+  "#55ed8a", "#a77aff", "#ff814d"
+];
+
+const R = 20;
+const STEP_X = R * 2;
+const STEP_Y = Math.sqrt(3) * R;
+const COLS = 14;
+const ROWS = 24;
+const LEFT = (W - (COLS - 1) * STEP_X - R) / 2;
+const FLOOR = H - 125;
+
+let grid = [];
+let score = 0;
+let level = 1;
+let best = Number(localStorage.getItem("bubble_best") || 0);
+let current = 0;
+let next = 1;
+let angle = -Math.PI / 2;
+let missedShots = 0;
+let running = true;
+let moving = null;
+let gameOver = false;
+let soundOn = true;
+let audioContext = null;
+
+document.getElementById("best").textContent = best;
+
+function playSound(type) {
+  if (!soundOn) return;
+
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+
+    if (!audioContext) audioContext = new AudioCtx();
+    if (audioContext.state === "suspended") audioContext.resume();
+
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const now = audioContext.currentTime;
+
+    const sounds = {
+      shoot: [420, 650, 0.09],
+      pop: [720, 260, 0.16],
+      drop: [260, 90, 0.35],
+      gameover: [240, 70, 0.55],
+      level: [500, 1000, 0.35]
+    };
+
+    const [start, end, duration] = sounds[type] || sounds.pop;
+
+    osc.type = type === "pop" ? "sine" : "triangle";
+    osc.frequency.setValueAtTime(start, now);
+    osc.frequency.exponentialRampToValueAtTime(end, now + duration);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.15, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  } catch (error) {
+    // Heli puudumine ei takista mängimist.
+  }
+}
+
+function rowLength(row) {
+  return row % 2 === 0 ? COLS : COLS - 1;
+}
+
+function center(c, r) {
+  return {
+    x: LEFT + R + c * STEP_X + (r % 2 ? R : 0),
+    y: 35 + R + r * STEP_Y
+  };
+}
+
+function randomColor() {
+  const count = Math.min(4, 3 + Math.floor((level - 1) / 3));
+  return Math.floor(Math.random() * count);
+}
+
+function makeGrid() {
+  grid = Array.from({length:ROWS}, () => Array(COLS).fill(null));
+  const rows = Math.min(5 + level, 10);
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < rowLength(r); c++) {
+      grid[r][c] = randomColor();
+    }
+  }
+}
+
+function updateStats() {
+  document.getElementById("score").textContent = score;
+  document.getElementById("level").textContent = level;
+  document.getElementById("best").textContent = best;
+}
+
+function setMessage(text) {
+  document.getElementById("message").textContent = text;
+}
+
+function newGame() {
+  score = 0;
+  level = 1;
+  missedShots = 0;
+  running = true;
+  moving = null;
+  gameOver = false;
+  current = randomColor();
+  next = randomColor();
+
+  makeGrid();
+
+  document.getElementById("pause").textContent = "PAUS";
+  setMessage("Alustame! Ühenda sama värvi mullid.");
+  updateStats();
+  draw();
+}
+
+function neighbors(r, c) {
+  const even = r % 2 === 0;
+  const offsets = even
+    ? [[0,-1],[0,1],[-1,-1],[-1,0],[1,-1],[1,0]]
+    : [[0,-1],[0,1],[-1,0],[-1,1],[1,0],[1,1]];
+
+  return offsets.map(([dr,dc]) => [r+dr,c+dc])
+    .filter(([nr,nc]) =>
+      nr >= 0 && nr < ROWS &&
+      nc >= 0 && nc < rowLength(nr)
+    );
+}
+
+function findGroup(r, c, color, seen = new Set()) {
+  const key = r + "," + c;
+  if (seen.has(key)) return [];
+  if (grid[r]?.[c] !== color) return [];
+
+  seen.add(key);
+  let result = [[r,c]];
+
+  for (const [nr,nc] of neighbors(r,c)) {
+    result = result.concat(findGroup(nr,nc,color,seen));
+  }
+  return result;
+}
+
+function removeFloating() {
+  const connected = new Set();
+  const stack = [];
+
+  for (let c = 0; c < COLS; c++) {
+    if (grid[0][c] !== null) stack.push([0,c]);
+  }
+
+  while (stack.length) {
+    const [r,c] = stack.pop();
+    const key = r + "," + c;
+
+    if (connected.has(key) || grid[r][c] === null) continue;
+
+    connected.add(key);
+    for (const [nr,nc] of neighbors(r,c)) stack.push([nr,nc]);
+  }
+
+  let removed = 0;
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < rowLength(r); c++) {
+      if (grid[r][c] !== null && !connected.has(r + "," + c)) {
+        grid[r][c] = null;
+        removed++;
+      }
+    }
+  }
+  return removed;
+}
+
+function countRemaining() {
+  let count = 0;
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < rowLength(r); c++) {
+      if (grid[r][c] !== null) count++;
+    }
+  }
+  return count;
+}
+
+function getMostCommonColor() {
+  const counts = Array(COLORS.length).fill(0);
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < rowLength(r); c++) {
+      const color = grid[r][c];
+      if (color !== null) counts[color]++;
+    }
+  }
+  let bestColor = current;
+  let bestCount = -1;
+  for (let i = 0; i < counts.length; i++) {
+    if (counts[i] > bestCount) {
+      bestCount = counts[i];
+      bestColor = i;
+    }
+  }
+  return bestColor;
+}
+
+function checkGameOver() {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < rowLength(r); c++) {
+      if (grid[r][c] !== null) {
+        const p = center(c,r);
+        if (p.y + R >= FLOOR) {
+          finish(false);
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function dropRow() {
+  // Nihutame kõik mullid ühe rea võrra allapoole.
+  for (let r = ROWS - 1; r > 0; r--) {
+    grid[r] = grid[r - 1].slice();
+  }
+
+  grid[0] = Array(COLS).fill(null);
+
+  for (let c = 0; c < rowLength(0); c++) {
+    grid[0][c] = randomColor();
+  }
+
+  missedShots = 0;
+  playSound("drop");
+  setMessage("Mullid langesid! Ole ettevaatlik!");
+  checkGameOver();
+}
+
+function attachBubble(x, y, color) {
+  let bestCell = null;
+  let bestDistance = Infinity;
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < rowLength(r); c++) {
+      if (grid[r][c] !== null) continue;
+
+      const p = center(c,r);
+      const d = Math.hypot(p.x-x,p.y-y);
+
+      if (d < bestDistance) {
+        bestDistance = d;
+        bestCell = [r,c];
+      }
+    }
+  }
+
+  if (!bestCell) {
+    finish(false);
+    return;
+  }
+
+  const [r,c] = bestCell;
+  grid[r][c] = color;
+
+  const group = findGroup(r,c,color);
+
+  if (group.length >= 3) {
+    for (const [gr,gc] of group) grid[gr][gc] = null;
+
+    const floating = removeFloating();
+    score += group.length * 10 + floating * 15;
+    missedShots = 0;
+
+    playSound("pop");
+    setMessage("Tubli! Eemaldasid " + group.length + " mulli.");
+  } else {
+    missedShots++;
+    setMessage("Ei saanud kokku! Ebaõnnestunud lasud: " + missedShots + "/3");
+
+    if (missedShots >= 3) {
+      dropRow();
+      if (gameOver) return;
+    }
+  }
+
+  current = next;
+  next = randomColor();
+
+  // Viimaste mullide puhul aitame sobiva värviga.
+  const remaining = countRemaining();
+
+  if (remaining <= 5 && remaining > 3) {
+    current = getMostCommonColor();
+    setMessage("Viimased mullid! Valisime sulle sobiva värvi.");
+  }
+
+  // Kui alles on kuni kolm mulli, eemaldame need boonuspunktide eest.
+  if (remaining > 0 && remaining <= 3) {
+    score += remaining * 50;
+
+    for (let rr = 0; rr < ROWS; rr++) {
+      for (let cc = 0; cc < rowLength(rr); cc++) {
+        grid[rr][cc] = null;
+      }
+    }
+
+    playSound("level");
+    setMessage("Viimased mullid eemaldatud! Boonuspunktid!");
+  }
+
+  if (score > best) {
+    best = score;
+    localStorage.setItem("bubble_best", best);
+  }
+
+  if (grid.every(row => row.every(v => v === null))) {
+    level++;
+    missedShots = 0;
+    makeGrid();
+    playSound("level");
+    setMessage("Suurepärane! Järgmine tase: " + level);
+  }
+
+  checkGameOver();
+  updateStats();
+}
+
+function finish(success) {
+  if (gameOver) return;
+
+  gameOver = true;
+  moving = null;
+  playSound("gameover");
+  setMessage(success ? "Võitsid!" : "Mäng läbi! Vajuta UUS MÄNG.");
+}
+
+function shoot() {
+  if (!running || moving || gameOver) return;
+
+  const minAngle = -Math.PI + 0.08;
+  const maxAngle = -0.08;
+  angle = Math.max(minAngle, Math.min(maxAngle, angle));
+
+  const speed = 10;
+  moving = {
+    x: W/2,
+    y: H-65,
+    vx: Math.cos(angle)*speed,
+    vy: Math.sin(angle)*speed,
+    color: current
+  };
+
+  playSound("shoot");
+}
+
+function update() {
+  if (!running || !moving || gameOver) return;
+
+  const b = moving;
+  b.x += b.vx;
+  b.y += b.vy;
+
+  if (b.x < R || b.x > W-R) b.vx *= -1;
+
+  let hit = b.y < 35 + R;
+
+  if (!hit) {
+    for (let r = 0; r < ROWS && !hit; r++) {
+      for (let c = 0; c < rowLength(r); c++) {
+        if (grid[r][c] === null) continue;
+
+        const p = center(c,r);
+        if (Math.hypot(p.x-b.x,p.y-b.y) < R*2-1) {
+          hit = true;
+          break;
+        }
+      }
+    }
+  }
+
+  if (hit) {
+    moving = null;
+    attachBubble(b.x,b.y,b.color);
+  }
+}
+
+function drawBubble(x,y,color) {
+  const grad = ctx.createRadialGradient(
+    x-R*.35,y-R*.4,2,x,y,R
+  );
+
+  grad.addColorStop(0,"#ffffff");
+  grad.addColorStop(.2,COLORS[color]);
+  grad.addColorStop(1,"#18263e");
+
+  ctx.beginPath();
+  ctx.arc(x,y,R,0,Math.PI*2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = "#ffffff99";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function draw() {
+  ctx.clearRect(0,0,W,H);
+
+  // Mänguala piirid
+  ctx.strokeStyle = "#00f5ff33";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(7,25);
+  ctx.lineTo(7,FLOOR);
+  ctx.lineTo(W-7,FLOOR);
+  ctx.lineTo(W-7,25);
+  ctx.stroke();
+
+  // Ohutuspiir
+  ctx.setLineDash([9,8]);
+  ctx.strokeStyle = "#ff2bd688";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(8,FLOOR);
+  ctx.lineTo(W-8,FLOOR);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Mullid
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < rowLength(r); c++) {
+      if (grid[r][c] !== null) {
+        const p = center(c,r);
+        drawBubble(p.x,p.y,grid[r][c]);
+      }
+    }
+  }
+
+  // Sihtimisjoon
+  if (running && !gameOver && !moving) {
+    ctx.setLineDash([7,8]);
+    ctx.strokeStyle = "#ffffff99";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W/2,H-65);
+    ctx.lineTo(
+      W/2+Math.cos(angle)*165,
+      H-65+Math.sin(angle)*165
+    );
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Mängija ja järgmine mull
+  drawBubble(W/2,H-65,current);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "15px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("JÄRGMINE",W-85,H-35);
+  drawBubble(W-55,H-85,next);
+
+  if (moving) drawBubble(moving.x,moving.y,moving.color);
+
+  if (!running || gameOver) {
+    ctx.fillStyle = "#07101fbb";
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = "#00f5ff";
+    ctx.font = "bold 36px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(gameOver ? "MÄNG LÄBI" : "PAUS",W/2,H/2);
+    ctx.font = "19px Arial";
+    ctx.fillStyle = "white";
+    ctx.fillText(
+      gameOver ? "Vajuta UUS MÄNG" : "Vajuta JÄTKA",
+      W/2,H/2+40
+    );
+    ctx.textAlign = "left";
+  }
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function aim(event) {
+  const rect = canvas.getBoundingClientRect();
+  const x = (event.clientX-rect.left)*W/rect.width;
+  const y = (event.clientY-rect.top)*H/rect.height;
+
+  if (y >= H-120) return;
+
+  angle = Math.atan2(y-(H-65),x-W/2);
+  angle = Math.max(-Math.PI+0.08,Math.min(-0.08,angle));
+}
+
+canvas.addEventListener("pointermove",aim);
+
+canvas.addEventListener("pointerdown",event => {
+  if (!running || gameOver) return;
+  aim(event);
+  shoot();
+});
+
+document.getElementById("pause").onclick = () => {
+  if (gameOver) return;
+
+  running = !running;
+  document.getElementById("pause").textContent =
+    running ? "PAUS" : "JÄTKA";
+};
+
+document.getElementById("sound").onclick = () => {
+  soundOn = !soundOn;
+  document.getElementById("sound").textContent =
+    soundOn ? "HELI: SEES" : "HELI: VÄLJAS";
+
+  if (soundOn) playSound("shoot");
+};
+
+document.getElementById("restart").onclick = newGame;
+
+newGame();
+loop();
+</script>
+</body>
+</html>
+
